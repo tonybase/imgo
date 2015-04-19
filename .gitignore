@@ -1,0 +1,15 @@
+# System
+.DS_Store
+
+# Build artifacts
+artifacts
+target
+classes
+
+# IDE & module files
+.idea
+*.iml
+.project
+.settings
+.classpath
+workspace.xml

@@ -1,0 +1,13 @@
+{
+	"im_port": 9090,
+	"http_port": 8080,
+	"max_clients": 10,
+	"db_config": {
+		"host": "127.0.0.1:3306",
+		"username": "root",
+		"password": "",
+		"name": "im",
+		"max_idle_conns": 10,
+		"max_open_conns": 50
+	}
+}
