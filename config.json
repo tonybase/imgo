@@ -5,7 +5,7 @@
   "db_config": {
     "host": "127.0.0.1:3306",
     "username": "root",
-    "password": "",
+    "password": "root",
     "name": "im",
     "max_idle_conns": 10,
     "max_open_conns": 50

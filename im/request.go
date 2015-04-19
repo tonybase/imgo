@@ -7,7 +7,8 @@ import (
 type IMRequest struct {
     Client *Client  `json:"-"`
     Command string  `json:"command"`
-    Data string     `json:"data"`
+
+    Data map[string]map[string]string     `json:"data"`
 }
 
 func (this *IMRequest) Encode() []byte {

@@ -1,34 +1,27 @@
 package im
 
 import (
-	"flag"
-	"im-go"
-	"testing"
+//"flag"
+///"im-go2"
+    "testing"
+    "fmt"
+    "im-go/im/model"
+
 )
 
 func TestConfig(t *testing.T) {
-	configPath := flag.String("config", "config.json", "Configuration file to use")
-	flag.Parse()
+    /**
+    var tt []string;
+    tt=append(tt,"444");
+    fmt.Println(tt[0])
+    */
+    var buddies []model.IMUser
+    group := model.Group{"id", "tt", buddies}
 
-	config, err := im.ReadConfig(*configPath)
-	if err != nil {
-		t.Error(err.Error())
-	}
+    user := model.IMUser{"userid", "", "", "", ""}
+    users := []model.IMUser{user}
 
-	t.Log("IMPort", config.IMPort)
-	t.Log("HttpPort", config.HttpPort)
-	t.Log("MaxClients", config.MaxClients)
-	t.Log("db.Host", config.DBConfig.Host)
-	t.Log("db.Username", config.DBConfig.Username)
-	t.Log("db.Password", config.DBConfig.Password)
-	t.Log("db.Name", config.DBConfig.Name)
-	t.Log("db.MaxIdleConns", config.DBConfig.MaxIdleConns)
-	t.Log("db.MaxOpenConns", config.DBConfig.MaxOpenConns)
+    group.Buddies=users
+    fmt.Println(string(group.Encode()));
 
-	db, err := config.DBConfig.Connect()
-	if err != nil {
-		t.Error(err.Error())
-	}
-	t.Log("获取到得数据库连接:", db)
-	defer db.Close()
 }

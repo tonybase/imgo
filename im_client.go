@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-    conn, err := net.Dial("tcp", "0.0.0.0:9090")
+    conn, err := net.Dial("tcp", "127.0.0.1:9090")
 
     if err != nil {
         log.Fatal(err)
@@ -20,7 +20,7 @@ func main() {
     in := bufio.NewReader(os.Stdin)
     out := bufio.NewWriter(os.Stdout)
 
-    client := im.CreateClient("key", conn)
+    client := im.CreateClient(conn)
 
     go func() {
         for {

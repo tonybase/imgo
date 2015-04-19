@@ -31,7 +31,7 @@ func handleLogin(resp http.ResponseWriter, req *http.Request) {
     if req.Method == "POST" {
         handlePost(resp, req)
     } else {
-        resp.Write(NewIMResponseSimple(404, "Not Found: " + req.Method).Encode())
+        resp.Write(NewIMResponseSimple(404, "Not Found: " + req.Method, "").Encode())
     }
 }
 
@@ -53,13 +53,13 @@ func handlePost(resp http.ResponseWriter, req *http.Request) {
 // 登录主方法
 func login(resp http.ResponseWriter, account string, password string, device string, ip string) {
     if account == "" {
-        resp.Write(NewIMResponseSimple(101, "账号不能为空").Encode())
+        resp.Write(NewIMResponseSimple(101, "账号不能为空", "").Encode())
     } else if password == "" {
-        resp.Write(NewIMResponseSimple(102, "密码不能为空").Encode())
+        resp.Write(NewIMResponseSimple(102, "密码不能为空", "").Encode())
     } else if device == "" {
-        resp.Write(NewIMResponseSimple(103, "设备名不能空").Encode())
+        resp.Write(NewIMResponseSimple(103, "设备名不能空", "").Encode())
     } else {
-        var user model.User
+        var user model.IMUser
         num := CheckAccount(account)
         if num > 0 {
             user = LoginUser(account, password)
@@ -74,16 +74,16 @@ func login(resp http.ResponseWriter, account string, password string, device str
                     returnDate["token"] = token //token uuid 带 横杠
                     data := make(map[string]map[string]string)
                     data["user"] = returnDate
-                    resp.Write(NewIMResponseSimple(200, "").Encode())
+                    resp.Write(NewIMResponseSimple(200, "", "").Encode())
                 } else {
-                    resp.Write(NewIMResponseSimple(105, "保存登录记录错误,请稍后再试").Encode())
+                    resp.Write(NewIMResponseSimple(105, "保存登录记录错误,请稍后再试", "").Encode())
                 }
 
             } else {
-                resp.Write(NewIMResponseSimple(104, "密码错误").Encode())
+                resp.Write(NewIMResponseSimple(104, "密码错误", "").Encode())
             }
         } else {
-            resp.Write(NewIMResponseSimple(103, "账户不存在").Encode())
+            resp.Write(NewIMResponseSimple(103, "账户不存在", "").Encode())
         }
     }
 }

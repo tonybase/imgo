@@ -4,7 +4,7 @@ import (
     "encoding/json"
 )
 //用户模型
-type User struct {
+type IMUser struct {
     Id     string `json:"id"`
     Nick   string `json:"nick"`
     Status string `json:"status"`
@@ -12,12 +12,12 @@ type User struct {
     Avatar string `json:"avatar"`
 }
 
-func (this *User) Encode() []byte {
+func (this *IMUser) Encode() []byte {
     s, _ := json.Marshal(*this)
     return s
 }
 
-func (this *User) Decode(data []byte) error {
+func (this *IMUser) Decode(data []byte) error {
     err := json.Unmarshal(data, this)
     return err
 }

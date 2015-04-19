@@ -12,8 +12,8 @@ type IMResponse struct {
     Refer  string                       `json:"refer"`
 }
 
-func NewIMResponseSimple(status int, msg string) *IMResponse {
-    return &IMResponse{status, msg, nil, ""}
+func NewIMResponseSimple(status int, msg string, refer string) *IMResponse {
+    return &IMResponse{status, msg, nil, refer}
 }
 
 func NewIMResponseData(data  interface{}, refer string) *IMResponse {

@@ -4,6 +4,7 @@ import (
     "database/sql"
     "log"
     "im-go/im/common"
+// "im-go2/im/model"
 )
 
 // 定义全局变量
@@ -12,11 +13,13 @@ var (
     Config *common.IMConfig
 )
 
+
 func Start(config *common.IMConfig) {
     Config = config;
 
     // 连接db
-    Database, err := config.DBConfig.Connect()
+    var err error
+    Database, err = config.DBConfig.Connect()
     if err != nil {
         log.Fatalf(err.Error())
     }
@@ -34,4 +37,5 @@ func Start(config *common.IMConfig) {
     if (err != nil) {
         log.Fatalln(err)
     }
+    log.Printf("获取到得数据库连接: %s", config.DBConfig.Name)
 }

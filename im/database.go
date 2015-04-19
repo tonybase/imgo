@@ -23,8 +23,8 @@ func CheckAccount(account string) int {
 }
 
 // 登录账号
-func LoginUser(account string, password string) model.User {
-    var user model.User
+func LoginUser(account string, password string) model.IMUser {
+    var user model.IMUser
     rows, err := Database.Query("select id,nick,status,sign,avatar from im_user where account=? and password=? ", account, password)
     if err != nil {
         log.Printf("根据账号及密码查询用户错误: ", err)
