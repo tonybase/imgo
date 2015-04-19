@@ -20,7 +20,7 @@ func main() {
     in := bufio.NewReader(os.Stdin)
     out := bufio.NewWriter(os.Stdout)
 
-    client := im.CreateClient(conn)
+    client := im.CreateClient("test", conn)
 
     go func() {
         for {
