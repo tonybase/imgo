@@ -169,12 +169,11 @@ func (this *Server) received(req IMRequest) {
 		for _, v := range groups {
 			var users []model.IMUser //每个分组最多拥有100个好友
 			rows, _ := Database.Query("select u.id,u.nick,u.status,u.sign,u.avatar from im_user u left join im_relation_user_group ug on u.id=ug.user_id where ug.group_id=?", v.Id)
-			i := 0
 			for rows.Next() {
 				var user model.IMUser
 				rows.Scan(&user.Id, &user.Nick, &user.Status, &user.Sign, &user.Avatar)
 				users = append(users, user)
-				i++
+
 			}
 			v.Buddies = users
 
@@ -251,11 +250,106 @@ func (this *Server) received(req IMRequest) {
 		break
 
 	case SEND_STATUS_CHANGE:
+		//{"command":"SEND_STATUS_CHANGE","data":{"user":{"token":"xxxx","status":"1"}}}
+		if reqData["user"]["token"] == "" {
+			client.PutOutgoing(NewIMResponseSimple(501, "TOKEN不能为空!", SEND_STATUS_CHANGE))
+			return
+		}
+		if reqData["user"]["status"] == "" {
+			client.PutOutgoing(NewIMResponseSimple(501, "TOKEN不能为空!", SEND_STATUS_CHANGE))
+			return
+		}
+		var id string
+		//先获取当前用户的ID
+		err := Database.QueryRow("SELECT user_id FROM im_conn WHERE token = ?", reqData["user"]["token"]).Scan(&id)
+		if err != nil {
+			client.PutOutgoing(NewIMResponseSimple(403, "您已经掉线，请重新登录!", SEND_MSG_RETURN))
+			return
+		} else {
+			//FIXME 还应该先校验token的有效性，当前用户的状态是不是和传得状态相同等
+			updateStmt, _ := Database.Prepare("UPDATE im_user SET `status` = ? WHERE id =?)")
+			defer updateStmt.Close()
+
+			res, err := updateStmt.Exec(reqData["user"]["status"], id)
+			if err != nil {
+				log.Println("更新用户状态错误:", err)
+				return
+			}
+			_, err = res.RowsAffected()
+
+			if err != nil {
+				log.Println("读取修改用户状态影响行数错误:", err)
+				return
+			}
+
+			//FIXME 应该先校验用户的状态 再考虑广播好友
+			//获取当前用户已连接的所有好友
+			rows, _ := Database.Query("select co.`key` from im_conn co where co.user_id in (select ug.user_id from im_relation_user_group ug where ug.group_id in (select g.id from  im_group g where g.creater=?))", id)
+			for rows.Next() {
+				var key string
+				rows.Scan(&key)
+				//给对应的连接推送好友状态变化的通知
+				data := make(map[string]string)
+				data["id"] = id
+				data["state"] = reqData["user"]["status"]
+				this.clients[key].PutOutgoing(NewIMResponseData(common.GetJson("user ", data), PUSH_STATUS_CHANGE))
+			}
+		}
+
 		// 发送状态，转发状态
 		break
 
 	case LOGOUT_REQUEST:
-		// 退出
+		// 退出//{"command":"SEND_STATUS_CHANGE","data":{"user":{"token":"xxxx"}}}
+		if reqData["user"]["token"] == "" {
+			client.PutOutgoing(NewIMResponseSimple(501, "TOKEN不能为空!", SEND_STATUS_CHANGE))
+			return
+		}
+		var id string
+		//先获取当前用户的ID
+		err := Database.QueryRow("SELECT user_id FROM im_conn WHERE token = ?", reqData["user"]["token"]).Scan(&id)
+		if err != nil {
+			client.PutOutgoing(NewIMResponseSimple(403, "您已经掉线，请重新登录!", SEND_MSG_RETURN))
+			return
+		} else {
+			tx, _ := Database.Begin()
+			//FIXME 还应该先校验token的有效性，当前用户的状态是不是和传得状态相同等
+			updateStmt, _ := Database.Prepare("UPDATE im_user SET `status` = '0' WHERE id =?)")
+			defer updateStmt.Close()
+			res, err := updateStmt.Exec(id)
+			if err != nil {
+				log.Println("更新用户状态错误:", err)
+				return
+			}
+			_, err = res.RowsAffected()
+
+			if err != nil {
+				log.Println("读取修改用户状态影响行数错误:", err)
+				return
+			}
+			//删除连接该token的连接
+			delStmt, _ := Database.Prepare("delete from im_conn where token=?")
+			defer delStmt.Close()
+			_, err = delStmt.Exec(reqData["user"]["token"])
+			if err != nil {
+				log.Println("删除用户连接错误:", err)
+				tx.Rollback()
+				return
+			}
+			tx.Commit()
+			//FIXME 应该先校验用户的状态 再考虑广播好友
+			//获取当前用户已连接的所有好友
+			rows, _ := Database.Query("select co.`key` from im_conn co where co.user_id in (select ug.user_id from im_relation_user_group ug where ug.group_id in (select g.id from  im_group g where g.creater=?))", id)
+			for rows.Next() {
+				var key string
+				rows.Scan(&key)
+				//给对应的连接推送好友状态变化的通知
+				data := make(map[string]string)
+				data["id"] = id
+				data["state"] = reqData["user"]["status"]
+				this.clients[key].PutOutgoing(NewIMResponseData(common.GetJson("user ", data), PUSH_STATUS_CHANGE))
+			}
+		}
 		client.Quit()
 		break
 	}
