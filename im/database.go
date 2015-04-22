@@ -45,7 +45,7 @@ func SaveLogin(userId string, token string, ip string) int64 {
     defer insStmt.Close()
     res, err := insStmt.Exec(uuid.New(), userId, token, time.Now().Format("2006-01-02 15:04:05"), ip)
     if err != nil {
-        log.Printf("保存用户登录记录错误:", err)
+        log.Printf("保存用户登录记录错误: ", err)
         return 0
     }
     num, err := res.RowsAffected()

@@ -69,8 +69,8 @@ func (this *Client) read() {
     for {
         if line, _, err := this.reader.ReadLine(); err == nil {
             req, err := DecodeIMRequest(line)
-            req.Client = this
             if (err == nil) {
+                req.Client = this
                 this.incoming <- *req
             } else {
                 // 忽略消息，连命令都不知道，没办法处理

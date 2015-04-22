@@ -66,15 +66,13 @@ func login(resp http.ResponseWriter, account string, password string, device str
             if !strings.EqualFold(user.Id, "") {
                 token := uuid.New()
                 if SaveLogin(user.Id, token, ip) > 0 {
-                    returnDate := make(map[string]string)
-                    returnDate["id"] = user.Id
-                    returnDate["nick"] = user.Nick
-                    returnDate["avatar"] = user.Avatar
-                    returnDate["status"] = user.Status
-                    returnDate["token"] = token //token uuid 带 横杠
-                    data := make(map[string]map[string]string)
-                    data["user"] = returnDate
-                    resp.Write(NewIMResponseSimple(200, "", "").Encode())
+                    returnData := make(map[string]string)
+                    returnData["id"] = user.Id
+                    returnData["nick"] = user.Nick
+                    returnData["avatar"] = user.Avatar
+                    returnData["status"] = user.Status
+                    returnData["token"] = token //token uuid 带 横杠
+                    resp.Write(NewIMResponseData(common.GetJson("user", returnData), "LOGIN_RETURN").Encode())
                 } else {
                     resp.Write(NewIMResponseSimple(105, "保存登录记录错误,请稍后再试", "").Encode())
                 }

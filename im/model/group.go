@@ -18,8 +18,7 @@ func (this *Group) Decode(data []byte) error {
     err := json.Unmarshal(data, this)
     return err
 }
+
 func (this *Group) AddUser(u IMUser) {
     this.Buddies=append(this.Buddies, u)
-
-
 }
