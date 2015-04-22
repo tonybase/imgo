@@ -267,7 +267,7 @@ func (this *Server) received(req IMRequest) {
 			return
 		} else {
 			//FIXME 还应该先校验token的有效性，当前用户的状态是不是和传得状态相同等
-			updateStmt, _ := Database.Prepare("UPDATE im_user SET `status` = ? WHERE id =?)")
+			updateStmt, _ := Database.Prepare("UPDATE im_user SET `status` = ? WHERE id =?")
 			defer updateStmt.Close()
 
 			res, err := updateStmt.Exec(reqData["user"]["status"], id)
@@ -314,7 +314,7 @@ func (this *Server) received(req IMRequest) {
 		} else {
 			tx, _ := Database.Begin()
 			//FIXME 还应该先校验token的有效性，当前用户的状态是不是和传得状态相同等
-			updateStmt, _ := Database.Prepare("UPDATE im_user SET `status` = '0' WHERE id =?)")
+			updateStmt, _ := Database.Prepare("UPDATE im_user SET `status` = '0' WHERE id =?")
 			defer updateStmt.Close()
 			res, err := updateStmt.Exec(id)
 			if err != nil {
