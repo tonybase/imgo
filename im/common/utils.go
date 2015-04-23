@@ -1,8 +1,8 @@
 package common
 
 import (
-	"encoding/json"
-	"log"
+	//"encoding/json"
+	//"log"
 	"net"
 	"net/http"
 	"strings"
@@ -20,9 +20,9 @@ func GetIp(r *http.Request) string {
 func GetJson(key string, data interface{}) interface{} {
 	datamap := make(map[string]interface{})
 	datamap[key] = data
-	dataJson, err := json.Marshal(data)
-	if err != nil {
-		log.Println("转JSON错误:", err)
-	}
-	return dataJson
+	// dataJson, err := json.Marshal(data)
+	// if err != nil {
+	// 	log.Println("转JSON错误:", err)
+	// }
+	return datamap
 }
