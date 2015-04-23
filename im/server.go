@@ -158,27 +158,27 @@ func (this *Server) received(req IMRequest) {
 			client.PutOutgoing(NewIMResponseSimple(402, "用户令牌不能为空!", GET_CONN_RETURN))
 			return
 		}
-		log.Println("获取好友列表")
+		log.Println("获取分组列表")
 		var groups []model.Group
 		rows, _ := Database.Query("select g.id,g.name from im_group g left join im_login l on l.user_id=g.creater where token=?", reqData["user"]["token"])
 		defer rows.Close()
 		for rows.Next() {
 			var group model.Group
 			rows.Scan(&group.Id, &group.Name)
+			log.Println("获取到分组了:", group.Id)
 			groups = append(groups, group)
 		}
 		//根据分组获取好友
 		log.Printf("根据分组获取对应的好友列表 %d", len(groups))
-		for _, v := range groups {
-			//var users []model.IMUser //每个分组最多拥有100个好友
+		for k, v := range groups {
 			rows, _ := Database.Query("select u.id,u.nick,u.status,u.sign,u.avatar from im_user u left join im_relation_user_group ug on u.id=ug.user_id where ug.group_id=?", v.Id)
 			for rows.Next() {
 				var user model.IMUser
 				rows.Scan(&user.Id, &user.Nick, &user.Status, &user.Sign, &user.Avatar)
-				v.Buddies = append(v.Buddies, user)
+				groups[k].Buddies = append(v.Buddies, user)
 			}
-			//v.Buddies = users
 		}
+		log.Printf("打印我的所有分组", groups)
 		client.PutOutgoing(NewIMResponseData(common.GetJson("categories", groups), GET_BUDDY_LIST_RETURN))
 		break
 
