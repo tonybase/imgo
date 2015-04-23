@@ -149,8 +149,8 @@ CREATE TABLE `im_relation_user_group` (
 --  Records of `im_relation_user_group`
 -- ----------------------------
 BEGIN;
-INSERT INTO `im_relation_user_group` VALUES ('1', '1');
-INSERT INTO `im_relation_user_group` VALUES ('2', '2');
+INSERT INTO `im_relation_user_group` VALUES ('1', '2');
+INSERT INTO `im_relation_user_group` VALUES ('2', '1');
 COMMIT;
 
 -- ----------------------------

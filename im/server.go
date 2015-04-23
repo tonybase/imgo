@@ -219,7 +219,8 @@ func (this *Server) receivedHandler(request IMRequest) {
 		}
 		data := make(map[string]string)
 		data["ticket"] = id
-		client.PutOut(NewIMResponseData(common.SetData("session ", data), CREATE_SESSION_RETURN))
+		data["receiver"] = reqData["session"]["receiver"]
+		client.PutOut(NewIMResponseData(common.SetData("session", data), CREATE_SESSION_RETURN))
 		break
 
 	case SEND_MSG:
@@ -238,7 +239,7 @@ func (this *Server) receivedHandler(request IMRequest) {
 		var sender string
 		err := Database.QueryRow("select c1.`key`,c2.`creater` from im_conn c1 left join im_conversation c2 on c1.user_id=c2.receiver where c2.id=?", reqData["message"]["ticket"]).Scan(&key, &sender)
 
-		if err != nil {
+		if err != nil || this.clients[key] == nil {
 			client.PutOut(NewIMResponseSimple(403, "对方未登录!", SEND_MSG_RETURN))
 			return
 		} else {
@@ -248,7 +249,7 @@ func (this *Server) receivedHandler(request IMRequest) {
 			data["content"] = reqData["message"]["content"]
 			data["ticket"] = reqData["message"]["ticket"]
 
-			this.clients[key].PutOut(NewIMResponseData(common.SetData("message ", data), PUSH_MSG)) //reqData["message"]["content"]
+			this.clients[key].PutOut(NewIMResponseData(common.SetData("message", data), PUSH_MSG)) //reqData["message"]["content"]
 		}
 		// 发送消息，转发消息
 
@@ -297,7 +298,7 @@ func (this *Server) receivedHandler(request IMRequest) {
 				data := make(map[string]string)
 				data["id"] = id
 				data["state"] = reqData["user"]["status"]
-				this.clients[key].PutOut(NewIMResponseData(common.SetData("user ", data), PUSH_STATUS_CHANGE))
+				this.clients[key].PutOut(NewIMResponseData(common.SetData("user", data), PUSH_STATUS_CHANGE))
 			}
 		}
 
@@ -352,7 +353,7 @@ func (this *Server) receivedHandler(request IMRequest) {
 				data := make(map[string]string)
 				data["id"] = id
 				data["state"] = reqData["user"]["status"]
-				this.clients[key].PutOut(NewIMResponseData(common.SetData("user ", data), PUSH_STATUS_CHANGE))
+				this.clients[key].PutOut(NewIMResponseData(common.SetData("user", data), PUSH_STATUS_CHANGE))
 			}
 		}
 		client.Quit()
