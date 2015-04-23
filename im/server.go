@@ -51,13 +51,13 @@ func (this *Server) listen() {
 			select {
 			// 接收到了消息
 			case message := <-this.insniffer:
-				this.receivedhandler(message)
+				this.receivedHandler(message)
 			// 新来了一个连接
 			case conn := <-this.joinsniffer:
-				this.joinhandler(conn)
+				this.joinHandler(conn)
 			// 退出了一个连接
 			case client := <-this.quitsniffer:
-				this.quithandler(client)
+				this.quitHandler(client)
 			}
 		}
 	}()
@@ -66,7 +66,7 @@ func (this *Server) listen() {
 /*
 新客户端请求处理方法
 */
-func (this *Server) joinhandler(conn net.Conn) {
+func (this *Server) joinHandler(conn net.Conn) {
 	//获取UUID作为客户端的key
 	key := uuid.New()
 	//创建一个客户端
@@ -102,7 +102,7 @@ func (this *Server) joinhandler(conn net.Conn) {
 /*
 客户端退出处理方法
 */
-func (this *Server) quithandler(client *Client) {
+func (this *Server) quitHandler(client *Client) {
 	if client != nil {
 		//调用客户端关闭方法
 		client.Close()
@@ -113,7 +113,7 @@ func (this *Server) quithandler(client *Client) {
 /*
 接收消息处理方法
 */
-func (this *Server) receivedhandler(request IMRequest) {
+func (this *Server) receivedHandler(request IMRequest) {
 	//获取请求的客户端
 	client := request.Client
 	log.Printf("客户端:[%s]发送命令:[%s]消息内容:[%s]", client.GetKey(), request.Command, request.Data)
