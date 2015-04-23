@@ -21,7 +21,7 @@ func GetIp(r *http.Request) string {
 组合数据 原转JSON(已修正不需要转JSON)
 */
 //FIXME 此处方法名需要重新命名 否则会产生干扰
-func GetJson(key string, data interface{}) interface{} {
+func SetData(key string, data interface{}) interface{} {
 	datamap := make(map[string]interface{})
 	datamap[key] = data
 	return datamap

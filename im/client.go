@@ -10,57 +10,57 @@ import (
 客户端结构体
 */
 type Client struct {
-	name     string        //客户端连接的唯一性 FIXME 需要修改成KEY name太笼统不能体现唯一性的概念
-	conn     net.Conn      //连接
-	incoming InMessage     //输入消息
-	outgoing OutMessage    //输出消息
-	reader   *bufio.Reader //读取
-	writer   *bufio.Writer //输出
-	quiting  chan *Client  //退出
+	key    string        //客户端连接的唯标志
+	conn   net.Conn      //连接
+	in     InMessage     //输入消息
+	out    OutMessage    //输出消息
+	reader *bufio.Reader //读取
+	writer *bufio.Writer //输出
+	quit   chan *Client  //退出
 }
 
 /*
 获取客户端名称
 */
-func (this *Client) GetName() string {
-	return this.name
+func (this *Client) GetKey() string {
+	return this.key
 }
 
 /*
 设置客户端名称
 */
-func (this *Client) SetName(name string) {
-	this.name = name
+func (this *Client) SetKey(key string) {
+	this.key = key
 }
 
 /*
 获取输入消息
 */
-func (this *Client) GetIncoming() IMRequest {
-	return <-this.incoming
+func (this *Client) GetIn() IMRequest {
+	return <-this.in
 }
 
 /*
 设置输出消息
 */
-func (this *Client) PutOutgoing(resp *IMResponse) {
-	this.outgoing <- *resp
+func (this *Client) PutOut(resp *IMResponse) {
+	this.out <- *resp
 }
 
 /*
 创建客户端
 */
-func CreateClient(name string, conn net.Conn) *Client {
+func CreateClient(key string, conn net.Conn) *Client {
 	reader := bufio.NewReader(conn)
 	writer := bufio.NewWriter(conn)
 	client := &Client{
-		name:     name,
-		conn:     conn,
-		incoming: make(InMessage),
-		outgoing: make(OutMessage),
-		quiting:  make(chan *Client),
-		reader:   reader,
-		writer:   writer,
+		key:    key,
+		conn:   conn,
+		in:     make(InMessage),
+		out:    make(OutMessage),
+		quit:   make(chan *Client),
+		reader: reader,
+		writer: writer,
 	}
 	client.Listen()
 	return client
@@ -78,7 +78,7 @@ func (this *Client) Listen() {
 退出了一个连接
 */
 func (this *Client) Quit() {
-	this.quiting <- this
+	this.quit <- this
 }
 
 /*
@@ -97,7 +97,7 @@ func (this *Client) read() {
 			req, err := DecodeIMRequest(line)
 			if err == nil {
 				req.Client = this
-				this.incoming <- *req
+				this.in <- *req
 			} else {
 				// 忽略消息，连命令都不知道，没办法处理
 				log.Printf("解析JSON错误: %s", line)
@@ -114,7 +114,7 @@ func (this *Client) read() {
 输出消息
 */
 func (this *Client) write() {
-	for resp := range this.outgoing {
+	for resp := range this.out {
 		if _, err := this.writer.WriteString(string(resp.Encode()) + "\n"); err != nil {
 			this.Quit()
 			return

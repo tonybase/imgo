@@ -72,6 +72,6 @@ func (this *DBConfig) Connect() (*sql.DB, error) {
 	if err := db.Ping(); err != nil {
 		return nil, &DatabaseError{err.Error()}
 	}
-	log.Printf("连接数据库成功 !")
+	log.Println("连接数据库成功")
 	return db, nil
 }
