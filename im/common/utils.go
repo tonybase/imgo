@@ -1,14 +1,14 @@
 package common
 
 import (
-	//"encoding/json"
-	//"log"
 	"net"
 	"net/http"
 	"strings"
 )
 
-//获取IP
+/*
+获取IP
+*/
 func GetIp(r *http.Request) string {
 	ip := net.ParseIP(strings.Split(r.RemoteAddr, ":")[0]).String()
 	if ip == "<nil>" {
@@ -17,12 +17,12 @@ func GetIp(r *http.Request) string {
 	return ip
 }
 
+/*
+组合数据 原转JSON(已修正不需要转JSON)
+*/
+//FIXME 此处方法名需要重新命名 否则会产生干扰
 func GetJson(key string, data interface{}) interface{} {
 	datamap := make(map[string]interface{})
 	datamap[key] = data
-	// dataJson, err := json.Marshal(data)
-	// if err != nil {
-	// 	log.Println("转JSON错误:", err)
-	// }
 	return datamap
 }

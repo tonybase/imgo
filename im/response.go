@@ -1,40 +1,57 @@
 package im
 
 import (
-    "encoding/json"
+	"encoding/json"
 )
 
-//返回消息
+/*
+返回消息结构体
+*/
 type IMResponse struct {
-    Status int                          `json:"status"`
-    Msg    string                       `json:"msg"`
-    Data   interface{}                  `json:"data"`
-    Refer  string                       `json:"refer"`
+	Status int         `json:"status"` //状态 0成功，非0错误
+	Msg    string      `json:"msg"`    //消息
+	Data   interface{} `json:"data"`   //数据
+	Refer  string      `json:"refer"`  //来源
 }
 
+/*
+错误消息构造方法
+*/
 func NewIMResponseSimple(status int, msg string, refer string) *IMResponse {
-    return &IMResponse{status, msg, nil, refer}
+	return &IMResponse{status, msg, nil, refer}
 }
 
-func NewIMResponseData(data  interface{}, refer string) *IMResponse {
-    return &IMResponse{0, "", data, refer}
+/*
+成功消息构造方法
+*/
+func NewIMResponseData(data interface{}, refer string) *IMResponse {
+	return &IMResponse{0, "", data, refer}
 }
 
+/*
+将返回消息转成JSON
+*/
 func (this *IMResponse) Encode() []byte {
-    s, _ := json.Marshal(*this)
-    return s
+	s, _ := json.Marshal(*this)
+	return s
 }
 
+/*
+将JSON转成返回消息
+*/
 func (this *IMResponse) Decode(data []byte) error {
-    err := json.Unmarshal(data, this)
-    return err
+	err := json.Unmarshal(data, this)
+	return err
 }
 
+/*
+将JSON转成返回消息(重载写法)
+*/
 func DecodeIMResponse(data []byte) (*IMResponse, error) {
-    resp := new(IMResponse)
-    err := resp.Decode(data)
-    if err != nil {
-        return nil, err
-    }
-    return resp, nil
+	resp := new(IMResponse)
+	err := resp.Decode(data)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
