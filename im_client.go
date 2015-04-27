@@ -6,6 +6,7 @@ import (
     "log"
     "net"
     "os"
+    "im-go/im/common"
 )
 
 func main() {
@@ -20,11 +21,11 @@ func main() {
     in := bufio.NewReader(os.Stdin)
     out := bufio.NewWriter(os.Stdout)
 
-    client := im.CreateClient("test", conn)
+    client := common.CreateClient("test", conn)
 
     go func() {
         for {
-            msg := client.GetIncoming()
+            msg := client.GetIn()
             out.Write(msg.Encode())
             out.WriteString("\n")
             out.Flush()
@@ -33,9 +34,9 @@ func main() {
 
     for {
         line, _, _ := in.ReadLine()
-        msg := new(im.IMResponse)
+        msg := new(common.IMResponse)
         msg.Data = string(line)
-        client.PutOutgoing(msg)
+        client.PutOut(msg)
     }
 
 }

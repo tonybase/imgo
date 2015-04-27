@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
+	"im-go/im/util"
 	"im-go/im"
-	"im-go/im/common"
 	"log"
 )
 
@@ -19,9 +19,10 @@ func main() {
 	configPath := flag.String("config", "config.json", "Configuration file to use")
 	flag.Parse()
 	// 读取配置信息
-	config, err := common.ReadConfig(*configPath)
+	config, err := util.ReadConfig(*configPath)
 	if err != nil {
 		log.Fatalf("读取配置文件错误: %s", err)
 	}
+
 	im.Start(config)
 }

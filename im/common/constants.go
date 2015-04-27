@@ -1,4 +1,4 @@
-package im
+package common
 
 const (
 	GET_KEY_RETURN        = "GET_KEY_RETURN"        // 请求TCP获取连接KEY

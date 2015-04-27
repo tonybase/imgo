@@ -1,17 +1,18 @@
-package im
+package server
 
 import (
 	"code.google.com/p/go-uuid/uuid"
 	"fmt"
-	"im-go/im/common"
-	"im-go/im/model"
+	"im-go/im/util"
 	"log"
 	"net/http"
 	"strings"
+	"im-go/im/common"
+	"im-go/im/model"
 )
 
 // 启动HTTP服务
-func StartHttpServer(config common.IMConfig) error {
+func StartHttpServer(config util.IMConfig) error {
 	log.Printf("Http服务器启动中...")
 
 	// 设置请求映射地址及对应处理方法
@@ -32,13 +33,13 @@ func handleLogin(resp http.ResponseWriter, req *http.Request) {
 	if req.Method == "POST" {
 		handlePost(resp, req)
 	} else {
-		resp.Write(NewIMResponseSimple(404, "Not Found: "+req.Method, "").Encode())
+		resp.Write(common.NewIMResponseSimple(404, "Not Found: "+req.Method, "").Encode())
 	}
 }
 
 // POST登录请求
 func handlePost(resp http.ResponseWriter, req *http.Request) {
-	ip := common.GetIp(req)
+	ip := util.GetIp(req)
 	device := req.FormValue("device")
 	account := req.FormValue("account")
 	password := req.FormValue("password")
@@ -54,35 +55,36 @@ func handlePost(resp http.ResponseWriter, req *http.Request) {
 // 登录主方法
 func login(resp http.ResponseWriter, account string, password string, device string, ip string) {
 	if account == "" {
-		resp.Write(NewIMResponseSimple(101, "账号不能为空", "").Encode())
+		resp.Write(common.NewIMResponseSimple(101, "账号不能为空", "").Encode())
 	} else if password == "" {
-		resp.Write(NewIMResponseSimple(102, "密码不能为空", "").Encode())
+		resp.Write(common.NewIMResponseSimple(102, "密码不能为空", "").Encode())
 	} else if device == "" {
-		resp.Write(NewIMResponseSimple(103, "设备名不能空", "").Encode())
+		resp.Write(common.NewIMResponseSimple(103, "设备名不能空", "").Encode())
 	} else {
 		var user model.IMUser
-		num := CheckAccount(account)
+		num := model.CheckAccount(account)
 		if num > 0 {
-			user = LoginUser(account, password)
+			user = model.LoginUser(account, password)
 			if !strings.EqualFold(user.Id, "") {
+				model.UpdateUserStatus("1", user.Id)
 				token := uuid.New()
-				if SaveLogin(user.Id, token, ip) > 0 {
+				if model.SaveLogin(user.Id, token, ip) > 0 {
 					returnData := make(map[string]string)
 					returnData["id"] = user.Id
 					returnData["nick"] = user.Nick
 					returnData["avatar"] = user.Avatar
 					returnData["status"] = user.Status
 					returnData["token"] = token //token uuid 带 横杠
-					resp.Write(NewIMResponseData(common.SetData("user", returnData), "LOGIN_RETURN").Encode())
+					resp.Write(common.NewIMResponseData(util.SetData("user", returnData), "LOGIN_RETURN").Encode())
 				} else {
-					resp.Write(NewIMResponseSimple(105, "保存登录记录错误,请稍后再试", "").Encode())
+					resp.Write(common.NewIMResponseSimple(105, "保存登录记录错误,请稍后再试", "").Encode())
 				}
 
 			} else {
-				resp.Write(NewIMResponseSimple(104, "密码错误", "").Encode())
+				resp.Write(common.NewIMResponseSimple(104, "密码错误", "").Encode())
 			}
 		} else {
-			resp.Write(NewIMResponseSimple(103, "账户不存在", "").Encode())
+			resp.Write(common.NewIMResponseSimple(103, "账户不存在", "").Encode())
 		}
 	}
 }

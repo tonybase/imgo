@@ -23,3 +23,14 @@ func (this *Group) Decode(data []byte) error {
 func (this *Group) AddUser(u IMUser) {
 	this.Buddies = append(this.Buddies, u)
 }
+func GetGroupsByToken(token string) []Group {
+	var groups []Group
+	rows, _ := Database.Query("select g.id,g.name from im_group g left join im_login l on l.user_id=g.creater where token=?", token)
+	defer rows.Close()
+	for rows.Next() {
+		var group Group
+		rows.Scan(&group.Id, &group.Name)
+		groups = append(groups, group)
+	}
+	return groups
+}

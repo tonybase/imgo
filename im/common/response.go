@@ -1,4 +1,4 @@
-package im
+package common
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ type IMResponse struct {
 	Data   interface{} `json:"data"`   //数据
 	Refer  string      `json:"refer"`  //来源
 }
-
+type OutMessage chan IMResponse     //输出消息通道
 /*
 错误消息构造方法
 */

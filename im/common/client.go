@@ -1,4 +1,4 @@
-package im
+package common
 
 import (
 	"bufio"
@@ -10,41 +10,41 @@ import (
 客户端结构体
 */
 type Client struct {
-	key    string        //客户端连接的唯标志
-	conn   net.Conn      //连接
-	in     InMessage     //输入消息
-	out    OutMessage    //输出消息
-	reader *bufio.Reader //读取
-	writer *bufio.Writer //输出
-	quit   chan *Client  //退出
+	Key    string        //客户端连接的唯标志
+	Conn   net.Conn      //连接
+	In     InMessage     //输入消息
+	Out    OutMessage    //输出消息
+	Reader *bufio.Reader //读取
+	Writer *bufio.Writer //输出
+	Quit   chan *Client  //退出
 }
-
+type ClientTable map[string]*Client //客户端列表
 /*
 获取客户端名称
 */
 func (this *Client) GetKey() string {
-	return this.key
+	return this.Key
 }
 
 /*
 设置客户端名称
 */
 func (this *Client) SetKey(key string) {
-	this.key = key
+	this.Key = key
 }
 
 /*
 获取输入消息
 */
 func (this *Client) GetIn() IMRequest {
-	return <-this.in
+	return <-this.In
 }
 
 /*
 设置输出消息
 */
 func (this *Client) PutOut(resp *IMResponse) {
-	this.out <- *resp
+	this.Out <- *resp
 }
 
 /*
@@ -54,13 +54,13 @@ func CreateClient(key string, conn net.Conn) *Client {
 	reader := bufio.NewReader(conn)
 	writer := bufio.NewWriter(conn)
 	client := &Client{
-		key:    key,
-		conn:   conn,
-		in:     make(InMessage),
-		out:    make(OutMessage),
-		quit:   make(chan *Client),
-		reader: reader,
-		writer: writer,
+		Key:    key,
+		Conn:   conn,
+		In:     make(InMessage),
+		Out:    make(OutMessage),
+		Quit:   make(chan *Client),
+		Reader: reader,
+		Writer: writer,
 	}
 	client.Listen()
 	return client
@@ -77,15 +77,15 @@ func (this *Client) Listen() {
 /*
 退出了一个连接
 */
-func (this *Client) Quit() {
-	this.quit <- this
+func (this *Client) Quiting() {
+	this.Quit <- this
 }
 
 /*
 关闭连接通道
 */
 func (this *Client) Close() {
-	this.conn.Close()
+	this.Conn.Close()
 }
 
 /*
@@ -93,18 +93,18 @@ func (this *Client) Close() {
 */
 func (this *Client) read() {
 	for {
-		if line, _, err := this.reader.ReadLine(); err == nil {
+		if line, _, err := this.Reader.ReadLine(); err == nil {
 			req, err := DecodeIMRequest(line)
 			if err == nil {
 				req.Client = this
-				this.in <- *req
+				this.In <- *req
 			} else {
 				// 忽略消息，连命令都不知道，没办法处理
 				log.Printf("解析JSON错误: %s", line)
 			}
 		} else {
 			log.Printf("Read error: %s\n", err)
-			this.Quit()
+			this.Quiting()
 			return
 		}
 	}
@@ -114,14 +114,14 @@ func (this *Client) read() {
 输出消息
 */
 func (this *Client) write() {
-	for resp := range this.out {
-		if _, err := this.writer.WriteString(string(resp.Encode()) + "\n"); err != nil {
-			this.Quit()
+	for resp := range this.Out {
+		if _, err := this.Writer.WriteString(string(resp.Encode()) + "\n"); err != nil {
+			this.Quiting()
 			return
 		}
-		if err := this.writer.Flush(); err != nil {
+		if err := this.Writer.Flush(); err != nil {
 			log.Printf("Write error: %s\n", err)
-			this.Quit()
+			this.Quiting()
 			return
 		}
 	}

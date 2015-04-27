@@ -1,12 +1,14 @@
-package common
+package util
 
 import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	//"im-go/im/common"
 	"io/ioutil"
 	"log"
+
 )
 
 /*
@@ -49,11 +51,11 @@ func ReadConfig(path string) (*IMConfig, error) {
 func (this *IMConfig) Parse(path string) error {
 	file, err := ioutil.ReadFile(path)
 	if err != nil {
-		return &ConfigurationError{err.Error()}
+		return err
 	}
 	err = json.Unmarshal(file, &this)
 	if err != nil {
-		return &ConfigurationError{err.Error()}
+		return err
 	}
 	return nil
 }
@@ -67,10 +69,10 @@ func (this *DBConfig) Connect() (*sql.DB, error) {
 	db.SetMaxIdleConns(this.MaxIdleConns) // 最大空闲连接
 	db.SetMaxOpenConns(this.MaxOpenConns) // 最大连接数
 	if err != nil {
-		return nil, &DatabaseError{err.Error()}
+		return nil, err
 	}
 	if err := db.Ping(); err != nil {
-		return nil, &DatabaseError{err.Error()}
+		return nil, err
 	}
 	log.Println("连接数据库成功")
 	return db, nil
