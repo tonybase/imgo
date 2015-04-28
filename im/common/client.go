@@ -14,11 +14,14 @@ type Client struct {
 	Conn   net.Conn      //连接
 	In     InMessage     //输入消息
 	Out    OutMessage    //输出消息
-	Reader *bufio.Reader //读取
-	Writer *bufio.Writer //输出
 	Quit   chan *Client  //退出
+	reader *bufio.Reader //读取
+	writer *bufio.Writer //输出
 }
-type ClientTable map[string]*Client //客户端列表
+/*
+客户端列表
+*/
+type ClientTable map[string]*Client
 /*
 获取客户端名称
 */
@@ -59,8 +62,8 @@ func CreateClient(key string, conn net.Conn) *Client {
 		In:     make(InMessage),
 		Out:    make(OutMessage),
 		Quit:   make(chan *Client),
-		Reader: reader,
-		Writer: writer,
+		reader: reader,
+		writer: writer,
 	}
 	client.Listen()
 	return client
@@ -93,7 +96,7 @@ func (this *Client) Close() {
 */
 func (this *Client) read() {
 	for {
-		if line, _, err := this.Reader.ReadLine(); err == nil {
+		if line, _, err := this.reader.ReadLine(); err == nil {
 			req, err := DecodeIMRequest(line)
 			if err == nil {
 				req.Client = this
@@ -115,11 +118,11 @@ func (this *Client) read() {
 */
 func (this *Client) write() {
 	for resp := range this.Out {
-		if _, err := this.Writer.WriteString(string(resp.Encode()) + "\n"); err != nil {
+		if _, err := this.writer.WriteString(string(resp.Encode()) + "\n"); err != nil {
 			this.Quiting()
 			return
 		}
-		if err := this.Writer.Flush(); err != nil {
+		if err := this.writer.Flush(); err != nil {
 			log.Printf("Write error: %s\n", err)
 			this.Quiting()
 			return

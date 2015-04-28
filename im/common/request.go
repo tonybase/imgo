@@ -9,17 +9,27 @@ type IMRequest struct {
 	Command string                       `json:"command"`
 	Data    map[string]map[string]string `json:"data"`
 }
-type InMessage chan IMRequest//读取消息通道
+/*
+输入消息通道
+*/
+type InMessage chan IMRequest
+/*
+转成JSON数据
+*/
 func (this *IMRequest) Encode() []byte {
 	s, _ := json.Marshal(*this)
 	return s
 }
-
+/*
+解析JSON数据
+*/
 func (this *IMRequest) Decode(data []byte) error {
 	err := json.Unmarshal(data, this)
 	return err
 }
-
+/*
+解析JSON数据
+*/
 func DecodeIMRequest(data []byte) (*IMRequest, error) {
 	req := new(IMRequest)
 	err := req.Decode(data)

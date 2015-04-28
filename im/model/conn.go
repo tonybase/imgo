@@ -4,6 +4,7 @@ import (
 	"im-go/im/util"
 	"log"
 	"time"
+	"database/sql"
 )
 
 //连接模型
@@ -63,7 +64,24 @@ func GetConnByUserId(id string) map[string]string {
 	}
 	return data
 }
-
+func DeleteConnByToken(tx *sql.Tx, token string) int64 {
+	//删除连接该token的连接
+	delStmt, _ := tx.Prepare("delete from im_conn where token=?")
+	defer delStmt.Close()
+	res, err := delStmt.Exec(token)
+	if err != nil {
+		tx.Rollback()
+		log.Println("删除用户连接错误:", err)
+		return 0
+	}
+	num, err := res.RowsAffected()
+	if err != nil {
+		tx.Rollback()
+		log.Println("读取删除用户连接影响行数错误:", err)
+		return 0
+	}
+	return num
+}
 /*
 添加连接
 */

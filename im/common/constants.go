@@ -1,5 +1,7 @@
 package common
-
+/*
+全局常量
+*/
 const (
 	GET_KEY_RETURN        = "GET_KEY_RETURN"        // 请求TCP获取连接KEY
 	GET_CONN              = "GET_CONN"              // 建立TCP长连接
