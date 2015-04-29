@@ -3,30 +3,22 @@ package server
 import (
 	"code.google.com/p/go-uuid/uuid"
 	"fmt"
+	"im-go/im/common"
+	"im-go/im/model"
 	"im-go/im/util"
 	"log"
 	"net"
-	"im-go/im/common"
-	"im-go/im/model"
 )
-/**
-var(
-InMessage=make(common.InMessage)//读取消息通道
-OutMessage=make(common.OutMessage)//输出消息通道
-ClientTable=make(common.ClientTable)//客户端列表
-)
-**/
-
 
 /*
 服务端结构体
 */
 type Server struct {
-	listener    net.Listener  //服务端监听器 监听xx端口
-	clients     common.ClientTable   //客户端列表 抽象出来单独维护和入参 更方便管理连接
-	joinsniffer chan net.Conn //访问连接嗅探器 触发创建客户端连接处理方法
-	quitsniffer chan *common.Client  //连接退出嗅探器 触发连接退出处理方法
-	insniffer   common.InMessage     //接收消息嗅探器 触发接收消息处理方法 对应客户端中in属性
+	listener    net.Listener        //服务端监听器 监听xx端口
+	clients     common.ClientTable  //客户端列表 抽象出来单独维护和入参 更方便管理连接
+	joinsniffer chan net.Conn       //访问连接嗅探器 触发创建客户端连接处理方法
+	quitsniffer chan *common.Client //连接退出嗅探器 触发连接退出处理方法
+	insniffer   common.InMessage    //接收消息嗅探器 触发接收消息处理方法 对应客户端中in属性
 }
 
 /*
@@ -279,7 +271,7 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 						data["content"] = reqData["message"]["content"]
 						data["ticket"] = reqData["message"]["ticket"]
 						log.Println("开始转发给:", key)
-						log.Println("当前的所有连接：",this.clients)
+						log.Println("当前的所有连接：", this.clients)
 						this.clients[key].PutOut(common.NewIMResponseData(util.SetData("message", data), common.PUSH_MSG))
 					} else {
 						client.PutOut(common.NewIMResponseSimple(402, "您还未登录!", common.SEND_MSG_RETURN))

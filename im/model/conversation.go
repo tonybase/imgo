@@ -29,6 +29,10 @@ func AddConversation(sender string, receiver string, token string) string {
 	return id
 
 }
+
+/*
+根据ID获取会话
+*/
 func GetConversationById(id string) map[string]string {
 	var data map[string]string
 	res, err := Database.Query("select * from im_conversation where id=?", id)
@@ -40,6 +44,10 @@ func GetConversationById(id string) map[string]string {
 	return data
 
 }
+
+/*
+根据ticket获取会话
+*/
 func GetReceiverKeyByTicket(ticket string) string {
 	var key string
 	err := Database.QueryRow("select c1.`key` from im_conn c1 left join im_conversation c2 on c1.user_id=c2.receiver where c2.id=?", ticket).Scan(&key)

@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	"im-go/im/util"
 	"im-go/im"
+	"im-go/im/util"
 	"log"
 )
 

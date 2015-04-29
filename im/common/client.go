@@ -18,10 +18,12 @@ type Client struct {
 	reader *bufio.Reader //读取
 	writer *bufio.Writer //输出
 }
+
 /*
 客户端列表
 */
 type ClientTable map[string]*Client
+
 /*
 获取客户端名称
 */

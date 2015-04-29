@@ -7,7 +7,6 @@ import (
 	"log"
 )
 
-
 /*
 启动服务方法
 */
@@ -15,7 +14,7 @@ func Start(config *util.IMConfig) {
 
 	var err error
 	//初始化model包下全局变量值
-	model.Config=config
+	model.Config = config
 	model.Database, err = config.DBConfig.Connect()
 	if err != nil {
 		log.Fatalf(err.Error())

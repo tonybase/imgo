@@ -1,18 +1,20 @@
 package model
 
 import (
+	"database/sql"
 	"im-go/im/util"
 	"log"
 	"time"
-	"database/sql"
 )
 
-//连接模型
+/*
+连接对象
+*/
 type IMConn struct {
-	UserId string
-	Token  string
-	Key    string
-	Date   time.Time
+	UserId string    //用户ID
+	Token  string    //token
+	Key    string    //连接key 唯一标识符
+	Date   time.Time //时间
 }
 
 /*
@@ -28,6 +30,9 @@ func CountConnByToken(token string) int64 {
 	return num
 }
 
+/*
+根据用户ID修改连接
+*/
 func UpdateConnByUserId(userId string, token string, key string) int64 {
 	var num int64
 	updateStmt, _ := Database.Prepare("UPDATE im_conn SET `token` = ? ,`key`=? ,date=? WHERE user_id =?")
@@ -44,6 +49,10 @@ func UpdateConnByUserId(userId string, token string, key string) int64 {
 	}
 	return num
 }
+
+/*
+根据token获取token
+*/
 func GetConnByToken(token string) map[string]string {
 	var data map[string]string
 	res, err := Database.Query("select * from im_conn where token=?", token)
@@ -54,6 +63,10 @@ func GetConnByToken(token string) map[string]string {
 	}
 	return data
 }
+
+/*
+根据用户ID获取连接
+*/
 func GetConnByUserId(id string) map[string]string {
 	var data map[string]string
 	res, err := Database.Query("select * from im_conn where user_id=?", id)
@@ -64,6 +77,10 @@ func GetConnByUserId(id string) map[string]string {
 	}
 	return data
 }
+
+/*
+根据token删除连接
+*/
 func DeleteConnByToken(tx *sql.Tx, token string) int64 {
 	//删除连接该token的连接
 	delStmt, _ := tx.Prepare("delete from im_conn where token=?")
@@ -82,13 +99,13 @@ func DeleteConnByToken(tx *sql.Tx, token string) int64 {
 	}
 	return num
 }
+
 /*
 添加连接
 */
 func AddConn(userId string, token string, key string) int64 {
 	insertStmt, _ := Database.Prepare("insert into im_conn VALUES (?, ?, ?, ?)")
 	defer insertStmt.Close()
-
 	res, err := insertStmt.Exec(userId, token, key, time.Now().Format("2006-01-02 15:04:05"))
 	if err != nil {
 		log.Println("保存用户连接错误:", err)

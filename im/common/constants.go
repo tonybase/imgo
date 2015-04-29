@@ -1,4 +1,5 @@
 package common
+
 /*
 全局常量
 */

@@ -13,10 +13,12 @@ type IMResponse struct {
 	Data   interface{} `json:"data"`   //数据
 	Refer  string      `json:"refer"`  //来源
 }
+
 /*
 输出消息通道
 */
 type OutMessage chan IMResponse
+
 /*
 错误消息构造方法
 */

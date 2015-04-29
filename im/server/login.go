@@ -3,12 +3,12 @@ package server
 import (
 	"code.google.com/p/go-uuid/uuid"
 	"fmt"
+	"im-go/im/common"
+	"im-go/im/model"
 	"im-go/im/util"
 	"log"
 	"net/http"
 	"strings"
-	"im-go/im/common"
-	"im-go/im/model"
 )
 
 // 启动HTTP服务
