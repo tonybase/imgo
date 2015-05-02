@@ -1,3 +1,15 @@
+-- ----------------------------
+-- Records of im_user
+-- ----------------------------
+INSERT INTO `im_user` VALUES ('1', '11', '11', '11', '11', '11', '0', '2006-01-02 15:04:05', '2006-01-02 15:04:05', null);
+INSERT INTO `im_user` VALUES ('2', '22', '22', '22', '22', '22', '0', '2006-01-02 15:04:05', '2006-01-02 15:04:05', null);
+
+-- ----------------------------
+-- Records of im_relation_user_category
+-- ----------------------------
+INSERT INTO `im_relation_user_group` VALUES ('2', '1');
+INSERT INTO `im_relation_user_group` VALUES ('1', '2');
+
 {"command":"GET_CONN","data":{"user":{"id":"1","token":"11","key":"b4ac46bc-544e-4970-a75a-d007e9aff9b1"}}}
 
 {"command":"GET_CONN","data":{"user":{"id":"2","token":"22","key":"0fee4bca-a303-4e53-86cd-c4d9c3aa9232"}}}

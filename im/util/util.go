@@ -24,9 +24,9 @@ func GetIp(r *http.Request) string {
 */
 //FIXME 此处方法名需要重新命名 否则会产生干扰
 func SetData(key string, data interface{}) interface{} {
-	datamap := make(map[string]interface{})
-	datamap[key] = data
-	return datamap
+	dataMap := make(map[string]interface{})
+	dataMap[key] = data
+	return dataMap
 }
 
 /*

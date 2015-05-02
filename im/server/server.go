@@ -125,7 +125,6 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 			return
 		}
 		if reqData["user"]["token"] == "" {
-
 			client.PutOut(common.NewIMResponseSimple(303, "用户令牌不能为空!", common.GET_CONN_RETURN))
 			return
 		}
@@ -139,13 +138,12 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 		user := model.GetUserById(reqData["user"]["id"])
 		if user.Id != "" {
 			//校验用户是否登录 得到map
-			data := model.GetLoginByToken(reqData["user"]["token"])
+			login := model.GetLoginByToken(reqData["user"]["token"])
 
-			if data["id"] != "" && user.Status == "1" {
+			if login.Id != "" && user.Status == "1" {
 				conn := model.GetConnByUserId(user.Id)
-				if conn["id"] != "" {
+				if conn.UserId != "" {
 					num = model.UpdateConnByUserId(reqData["user"]["id"], reqData["user"]["token"], reqData["user"]["key"])
-
 				} else {
 					num = model.AddConn(reqData["user"]["id"], reqData["user"]["token"], reqData["user"]["key"])
 				}
@@ -164,63 +162,61 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 	case common.GET_BUDDY_LIST:
 		// 获取好友分组列表
 		if reqData["user"]["token"] == "" {
-			client.PutOut(common.NewIMResponseSimple(402, "用户令牌不能为空!", common.GET_CONN_RETURN))
+			client.PutOut(common.NewIMResponseSimple(301, "用户令牌不能为空!", common.GET_CONN_RETURN))
 			return
 		}
 		//校验用户是否登录 得到map
 		user := model.GetUserByToken(reqData["user"]["token"])
-		data := model.GetLoginByToken(reqData["user"]["token"])
+		login := model.GetLoginByToken(reqData["user"]["token"])
 		log.Println("获取数据如下")
 		log.Println("token:", reqData["user"]["token"])
-		log.Println("id：", data["id"])
+		log.Println("id：", login.UserId)
 		log.Println("获取到用户", user)
 		//return
-		id := data["id"]
 		if user.Id != "" {
-
-			if id != "" && user.Status == "1" {
-				groups := model.GetGroupsByToken(reqData["user"]["token"])
-				groups = model.GetBuddiesByGroups(groups)
-				client.PutOut(common.NewIMResponseData(util.SetData("categories", groups), common.GET_BUDDY_LIST_RETURN))
+			if login.Id != "" && user.Status == "1" {
+				categories := model.GetCategoriesByToken(reqData["user"]["token"])
+				categories = model.GetBuddiesByCategories(categories)
+				client.PutOut(common.NewIMResponseData(util.SetData("categories", categories), common.GET_BUDDY_LIST_RETURN))
 			} else {
-				client.PutOut(common.NewIMResponseSimple(304, "用户未登录!", common.GET_CONN_RETURN))
+				client.PutOut(common.NewIMResponseSimple(303, "用户未登录!", common.GET_CONN_RETURN))
 				return
 			}
 		} else {
-			client.PutOut(common.NewIMResponseSimple(304, "用户不存在!", common.GET_CONN_RETURN))
+			client.PutOut(common.NewIMResponseSimple(302, "用户不存在!", common.GET_CONN_RETURN))
 			return
 		}
 	case common.CREATE_SESSION:
 		// 创建会话  //{"command":"CREATE_SESSION","data":{"session":{"sender":"xxx","receiver":"xxx","token":"xxxx"}}}
 		if reqData["session"]["sender"] == "" {
-			client.PutOut(common.NewIMResponseSimple(401, "发送者不能为空!", common.CREATE_SESSION_RETURN))
+			client.PutOut(common.NewIMResponseSimple(301, "发送者不能为空!", common.CREATE_SESSION_RETURN))
 			return
 		}
 		if reqData["session"]["receiver"] == "" {
-			client.PutOut(common.NewIMResponseSimple(303, "接收者不能为空!", common.CREATE_SESSION_RETURN))
+			client.PutOut(common.NewIMResponseSimple(302, "接收者不能为空!", common.CREATE_SESSION_RETURN))
 			return
 		}
 		if reqData["session"]["token"] == "" {
 			client.PutOut(common.NewIMResponseSimple(303, "用户令牌不能为空!", common.CREATE_SESSION_RETURN))
 			return
 		}
+		token := reqData["session"]["token"]
 		sender := model.GetUserById(reqData["session"]["sender"])
 		receiver := model.GetUserById(reqData["session"]["receiver"])
-		data := model.GetLoginByToken(reqData["session"]["token"])
-		var id string
+		// user := model.GetUserById(reqData["session"]["token"])
+		login := model.GetLoginByToken(token)
 		if sender.Id != "" {
 			if receiver.Id != "" {
-				if sender.Status == "1" && data["id"] != "" {
+				if sender.Status == "1" && login.Id != "" {
 					//FIXME 还应该判断接收者是不是在线，如果不在线，消息缓存到留言表中 留着触发登录事件推送消息
-					id = model.AddConversation(reqData["session"]["sender"], reqData["session"]["receiver"], reqData["session"]["token"])
-					if id == "" {
+					conversation_id := model.AddConversation(sender.Id, receiver.Id)
+					if conversation_id == "" {
 						client.PutOut(common.NewIMResponseSimple(304, "创建会话失败", common.GET_CONN_RETURN))
 						return
-
 					} else {
 						data := make(map[string]string)
-						data["ticket"] = id
-						data["receiver"] = reqData["session"]["receiver"]
+						data["ticket"] = conversation_id
+						data["receiver"] = receiver.Id
 						client.PutOut(common.NewIMResponseData(util.SetData("session", data), common.CREATE_SESSION_RETURN))
 					}
 				} else {
@@ -252,19 +248,17 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 			return
 		}
 		conversion := model.GetConversationById(reqData["message"]["ticket"])
-		if conversion["id"] != "" {
-			sender := model.GetUserById(conversion["creater"])
-			recevier := model.GetUserById(conversion["receiver"])
+		if conversion.Id != "" {
+			sender := model.GetUserById(conversion.Creator)
+			receiver := model.GetUserById(conversion.Receiver)
 			if sender.Id != "" {
-				if recevier.Id != "" {
-					data := model.GetLoginByToken(reqData["message"]["token"])
-					if sender.Status == "1" && data["id"] != "" {
+				if receiver.Id != "" {
+					login := model.GetLoginByToken(reqData["message"]["token"])
+					if sender.Status == "1" && login.Id != "" {
 						key := model.GetReceiverKeyByTicket(reqData["message"]["ticket"])
-						/*
-							if key == "" {
-								client.PutOut(common.NewIMResponseSimple(402, "对方还未登录!", SEND_MSG_RETURN))
-							}
-						*/
+//						if key == "" {
+//							client.PutOut(common.NewIMResponseSimple(402, "对方还未登录!", SEND_MSG_RETURN))
+//						}
 						//把消息转发给接收者
 						data := make(map[string]string)
 						data["sender"] = sender.Id
@@ -308,7 +302,7 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 		//判断用户的合法性
 		if user.Id == "" {
 			//判断该用户是不是合法已经登录的用户 不校验当前用户的状态 只校验当前用户是不是和系统还存在一致的连接
-			if login["user_id"] == conn["user_id"] {
+			if login.UserId == conn.UserId {
 				//判断要求改变的状态和当前该用户的状态是否一致
 				if user.Status != reqData["user"]["status"] {
 					//FIXME 此处不做如果状态是离线就删除用户连接的操作,状态改变认为是客户端手动操作或者网络异常
@@ -351,7 +345,7 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 		//判断用户的合法性
 		if user.Id == "" {
 			//判断该用户是不是合法已经登录的用户 不校验当前用户的状态 只校验当前用户是不是和系统还存在一致的连接
-			if login["user_id"] == conn["user_id"] {
+			if login.UserId == conn.UserId {
 				//判断要求改变的状态和当前该用户的状态是否一致
 				if user.Status != "0" {
 					tx, _ := model.Database.Begin()

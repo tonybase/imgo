@@ -14,11 +14,11 @@ func TestConfig(t *testing.T) {
 	  tt=append(tt,"444");
 	  fmt.Println(tt[0])
 	*/
-	var buddies []model.IMUser
-	group := model.Group{"id", "tt", buddies}
+	var buddies []model.User
+	group := model.Category{"id", "tt", buddies}
 
-	user := model.IMUser{"userid", "", "", "", ""}
-	users := []model.IMUser{user}
+	user := model.User{"userid", "", "", "", ""}
+	users := []model.User{user}
 
 	group.Buddies = users
 	fmt.Println(string(group.Encode()))

@@ -6,9 +6,9 @@ import (
 )
 
 /*
-消息对象
-*/
-type IMMessage struct {
+ 消息对象
+ */
+type Message struct {
 	Id        string    //id
 	Sender    string    //发送人
 	To        string    //接收人
@@ -19,17 +19,17 @@ type IMMessage struct {
 }
 
 /*
-转JSON数据
-*/
-func (this *IMMessage) Encode() []byte {
+ 转JSON数据
+ */
+func (this *Message) Encode() []byte {
 	s, _ := json.Marshal(*this)
 	return s
 }
 
 /*
-解析JSON数据
-*/
-func (this *IMMessage) Decode(data []byte) error {
+ 解析JSON数据
+ */
+func (this *Message) Decode(data []byte) error {
 	err := json.Unmarshal(data, this)
 	return err
 }
