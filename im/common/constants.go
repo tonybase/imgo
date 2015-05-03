@@ -17,6 +17,7 @@ const (
 	SEND_STATUS_CHANGE    = "SEND_STATUS_CHANGE"    // 发送状态
 	PUSH_STATUS_CHANGE    = "PUSH_STATUS_CHANGE"    // 接收状态
 	LOGOUT_REQUEST        = "LOGOUT_REQUEST"        // 退出
+	UNAUTHORIZED          = "UNAUTHORIZED"          // 未授权
 
 	FORMAT_DATE           = "2006-01-02"
 	FORMAT_DATETIME       = "2006-01-02 15:04:05"

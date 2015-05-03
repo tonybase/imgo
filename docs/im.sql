@@ -27,12 +27,12 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 DROP TABLE IF EXISTS `im_conn`;
 CREATE TABLE `im_conn` (
-  `user_id` varchar(255) CHARACTER SET utf8 NOT NULL COMMENT '用户ID',
+  `id` varchar(255) NOT NULL COMMENT '连接唯一标识',
+  `user_id` varchar(255) NOT NULL COMMENT '用户ID',
   `token` varchar(255) NOT NULL COMMENT '连接TOKEN',
-  `key` varchar(255) NOT NULL COMMENT '连接唯一标识',
   `create_at` datetime NOT NULL COMMENT '创建日期',
   `update_at` datetime NOT NULL COMMENT '更新日期',
-  PRIMARY KEY (`key`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- ----------------------------

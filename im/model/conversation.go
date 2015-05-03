@@ -9,9 +9,9 @@ import (
 type Conversation struct {
 	Id         string        `json:"id"`
 	Creator    string        `json:"creator"`
-	Create_at  time.Time    `json:"create_at"`
 	Receiver   string        `json:"receiver"`
 	Type       string        `json:"type"`
+	Create_at  time.Time    `json:"create_at"`
 }
 
 /*
@@ -34,7 +34,25 @@ func AddConversation(sender string, receiver string) string {
 		return ""
 	}
 	return id
+}
 
+func GetConversation(sender string, receiver string) Conversation {
+	var conv Conversation
+	rows, err := Database.Query("select * from im_conversation where creator=? and receiver=? ", sender, receiver)
+	if err != nil {
+		log.Printf("根据账号及密码查询用户错误: ", err)
+	}
+	r, _ := rows.Columns();
+	log.Println(r)
+
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&conv.Id, &conv.Creator, &conv.Receiver, &conv.Type, &conv.Create_at)
+		if err != nil {
+			log.Printf("根据账号及密码查询结果映射至对象错误:", err)
+		}
+	}
+	return conv
 }
 
 /*
@@ -54,11 +72,18 @@ func GetConversationById(id string) Conversation {
 /*
  根据ticket获取会话
  */
-func GetReceiverKeyByTicket(ticket string) string {
-	var key string
-	err := Database.QueryRow("select c1.`key` from im_conn c1 left join im_conversation c2 on c1.user_id=c2.receiver where c2.id=?", ticket).Scan(&key)
+func GetReceiverKeyByTicket(ticket string) []string {
+	var keys []string
+	rows, err := Database.Query("select c1.`id` from im_conn c1 left join im_conversation c2 on c1.user_id=c2.receiver where c2.id=?", ticket)
 	if err != nil {
 		log.Println("根据Ticket获取接收者Key和发送者ID错误:", err)
+		return nil
 	}
-	return key
+	for rows.Next() {
+		var key string
+		rows.Scan(&key)
+
+		keys = append(keys, key)
+	}
+	return keys
 }

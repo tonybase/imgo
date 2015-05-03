@@ -1,0 +1,149 @@
+{
+	"id": "1524f763-645a-febb-b1f5-bb5a4da194b9",
+	"name": "IM-GO",
+	"description": "",
+	"order": [
+		"0fd53eb4-2db3-a62a-ee9e-e99abdd1f612",
+		"094e7b8b-1a49-635b-9a55-a9db088ff62d",
+		"f3eda7cc-24c3-4bf4-64f5-742bc840ab75",
+		"b37409d1-8f2d-d609-9541-22d0fe70fdb3"
+	],
+	"folders": [],
+	"timestamp": 1429336346111,
+	"synced": false,
+	"owner": 0,
+	"sharedWithTeam": false,
+	"subscribed": false,
+	"remoteLink": "",
+	"public": false,
+	"write": true,
+	"requests": [
+		{
+			"id": "094e7b8b-1a49-635b-9a55-a9db088ff62d",
+			"headers": "",
+			"url": "{{host}}/register",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "POST",
+			"data": [
+				{
+					"key": "account",
+					"value": "22",
+					"type": "text",
+					"enabled": true
+				},
+				{
+					"key": "password",
+					"value": "22",
+					"type": "text",
+					"enabled": true
+				},
+				{
+					"key": "nick",
+					"value": "22",
+					"type": "text",
+					"enabled": true
+				}
+			],
+			"dataMode": "params",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1430557757208,
+			"name": "register",
+			"description": "",
+			"collectionId": "1524f763-645a-febb-b1f5-bb5a4da194b9",
+			"responses": [],
+			"synced": false
+		},
+		{
+			"id": "0fd53eb4-2db3-a62a-ee9e-e99abdd1f612",
+			"headers": "",
+			"url": "{{host}}/login",
+			"pathVariables": {},
+			"preRequestScript": "",
+			"method": "POST",
+			"collectionId": "1524f763-645a-febb-b1f5-bb5a4da194b9",
+			"data": [],
+			"dataMode": "params",
+			"name": "login",
+			"description": "",
+			"descriptionFormat": "html",
+			"time": 1429336510880,
+			"version": 2,
+			"responses": [],
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"collectionOwner": 0,
+			"synced": false
+		},
+		{
+			"id": "b37409d1-8f2d-d609-9541-22d0fe70fdb3",
+			"headers": "",
+			"url": "{{host}}/user_category",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "POST",
+			"data": [
+				{
+					"key": "user_id",
+					"value": "22",
+					"type": "text",
+					"enabled": true
+				},
+				{
+					"key": "name",
+					"value": "22",
+					"type": "text",
+					"enabled": true
+				}
+			],
+			"dataMode": "params",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1430558725241,
+			"name": "user_category",
+			"description": "",
+			"collectionId": "1524f763-645a-febb-b1f5-bb5a4da194b9",
+			"responses": [],
+			"synced": false
+		},
+		{
+			"id": "f3eda7cc-24c3-4bf4-64f5-742bc840ab75",
+			"headers": "",
+			"url": "{{host}}/user_relation",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "POST",
+			"data": [
+				{
+					"key": "user_id",
+					"value": "22",
+					"type": "text",
+					"enabled": true
+				},
+				{
+					"key": "category_id",
+					"value": "22",
+					"type": "text",
+					"enabled": true
+				}
+			],
+			"dataMode": "params",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1430558880756,
+			"name": "user_relation",
+			"description": "",
+			"collectionId": "1524f763-645a-febb-b1f5-bb5a4da194b9",
+			"responses": [],
+			"synced": false
+		}
+	]
+}

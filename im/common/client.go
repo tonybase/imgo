@@ -4,12 +4,14 @@ import (
 	"bufio"
 	"log"
 	"net"
+	"im-go/im/model"
 )
 
 /*
-客户端结构体
-*/
+ 客户端结构体
+ */
 type Client struct {
+	// 连接信息
 	Key    string        //客户端连接的唯标志
 	Conn   net.Conn      //连接
 	In     InMessage     //输入消息
@@ -17,44 +19,32 @@ type Client struct {
 	Quit   chan *Client  //退出
 	reader *bufio.Reader //读取
 	writer *bufio.Writer //输出
+	// 登录信息
+	Login  model.Login   //客户端用户ID
 }
 
 /*
-客户端列表
-*/
+ 客户端列表
+ */
 type ClientTable map[string]*Client
 
 /*
-获取客户端名称
-*/
-func (this *Client) GetKey() string {
-	return this.Key
-}
-
-/*
-设置客户端名称
-*/
-func (this *Client) SetKey(key string) {
-	this.Key = key
-}
-
-/*
-获取输入消息
-*/
+ 获取输入消息
+ */
 func (this *Client) GetIn() IMRequest {
 	return <-this.In
 }
 
 /*
-设置输出消息
-*/
+ 设置输出消息
+ */
 func (this *Client) PutOut(resp *IMResponse) {
 	this.Out <- *resp
 }
 
 /*
-创建客户端
-*/
+ 创建客户端
+ */
 func CreateClient(key string, conn net.Conn) *Client {
 	reader := bufio.NewReader(conn)
 	writer := bufio.NewWriter(conn)
@@ -72,30 +62,30 @@ func CreateClient(key string, conn net.Conn) *Client {
 }
 
 /*
-自动读入或者写出消息
-*/
+ 自动读入或者写出消息
+ */
 func (this *Client) Listen() {
 	go this.read()
 	go this.write()
 }
 
 /*
-退出了一个连接
-*/
+ 退出了一个连接
+ */
 func (this *Client) Quiting() {
 	this.Quit <- this
 }
 
 /*
-关闭连接通道
-*/
+ 关闭连接通道
+ */
 func (this *Client) Close() {
 	this.Conn.Close()
 }
 
 /*
-读取消息
-*/
+ 读取消息
+ */
 func (this *Client) read() {
 	for {
 		if line, _, err := this.reader.ReadLine(); err == nil {
@@ -116,8 +106,8 @@ func (this *Client) read() {
 }
 
 /*
-输出消息
-*/
+ 输出消息
+ */
 func (this *Client) write() {
 	for resp := range this.Out {
 		if _, err := this.writer.WriteString(string(resp.Encode()) + "\n"); err != nil {

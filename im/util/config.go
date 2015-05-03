@@ -64,7 +64,7 @@ func (this *IMConfig) Parse(path string) error {
 */
 func (this *DBConfig) Connect() (*sql.DB, error) {
 	// 从配置文件中读取配置信息并初始化连接池(go中含有连接池处理机制)
-	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", this.Username, this.Password, this.Host, this.Name))
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true&charset=utf8", this.Username, this.Password, this.Host, this.Name))
 	db.SetMaxIdleConns(this.MaxIdleConns) // 最大空闲连接
 	db.SetMaxOpenConns(this.MaxOpenConns) // 最大连接数
 	if err != nil {

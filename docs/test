@@ -18,4 +18,4 @@ INSERT INTO `im_relation_user_group` VALUES ('1', '2');
 
 {"command":"SEND_MSG","data":{"message":{"content":"xxx","ticket":"a865b423-a148-4464-b427-35f22f3b6811","token":"11"}}}
 
-select c1.`key`,c2.`creater` from im_conn c1 left join im_conversation c2 on c1.user_id=c2.receiver where c2.id='a865b423-a148-4464-b427-35f22f3b6811'
+select c1.`id`,c2.`creater` from im_conn c1 left join im_conversation c2 on c1.user_id=c2.receiver where c2.id='a865b423-a148-4464-b427-35f22f3b6811'

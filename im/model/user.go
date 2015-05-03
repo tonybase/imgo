@@ -142,31 +142,30 @@ func SaveUser(account string, password string, nick string, avatar string) int64
 /*
  修改用户状态
  */
-func UpdateUserStatus(userId string, status string) int64 {
-	var num int64
+func UpdateUserStatus(userId string, status string) bool {
 	updateStmt, _ := Database.Prepare("UPDATE im_user SET `status` = ? WHERE id =?")
 	defer updateStmt.Close()
 	res, err := updateStmt.Exec(status, userId)
 	if err != nil {
 		log.Println("更新用户状态错误:", err)
-		return 0
+		return false
 	}
-	num, err = res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		log.Println("读取修改用户状态影响行数错误:", err)
-		return 0
+		return false
 	}
-	return num
+	return true
 }
 
 /*
  修改用户状态(事务)
  */
-func UpdateUserStatusTx(tx *sql.Tx, status string, id string) int64 {
+func UpdateUserStatusTx(tx *sql.Tx, userId string, status string) int64 {
 	var num int64
 	updateStmt, _ := tx.Prepare("UPDATE im_user SET `status` = ? WHERE id =?")
 	defer updateStmt.Close()
-	res, err := updateStmt.Exec(status, id)
+	res, err := updateStmt.Exec(status, userId)
 	if err != nil {
 		tx.Rollback()
 		log.Println("更新用户状态错误:", err)
@@ -186,7 +185,7 @@ func UpdateUserStatusTx(tx *sql.Tx, status string, id string) int64 {
  */
 func GetBuddiesKeyById(id string) []string {
 	var keys []string
-	rows, _ := Database.Query("select co.`key` from im_conn co where co.user_id in (select ug.user_id from im_relation_user_category ug where ug.category_id in (select g.id from  im_category g where g.creator=?))", id)
+	rows, _ := Database.Query("select co.`id` from im_conn co where co.user_id in (select ug.user_id from im_relation_user_category ug where ug.category_id in (select g.id from im_category g where g.creator=?))", id)
 	for rows.Next() {
 		var key string
 		rows.Scan(&key)

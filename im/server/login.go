@@ -118,7 +118,6 @@ func login(resp http.ResponseWriter, account string, password string, ip string)
 		if num > 0 {
 			user = model.LoginUser(account, password)
 			if !strings.EqualFold(user.Id, "") {
-				model.UpdateUserStatus(user.Id, "1")
 				token := uuid.New()
 				if model.SaveLogin(user.Id, token, ip) > 0 {
 					returnData := make(map[string]string)
@@ -131,7 +130,6 @@ func login(resp http.ResponseWriter, account string, password string, ip string)
 				} else {
 					resp.Write(common.NewIMResponseSimple(105, "保存登录记录错误,请稍后再试", "").Encode())
 				}
-
 			} else {
 				resp.Write(common.NewIMResponseSimple(104, "密码错误", "").Encode())
 			}
