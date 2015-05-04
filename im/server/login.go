@@ -18,8 +18,8 @@ func StartHttpServer(config util.IMConfig) error {
 	// 设置请求映射地址及对应处理方法
 	http.HandleFunc("/register", handleRegister)
 	http.HandleFunc("/login", handleLogin)
-	http.HandleFunc("/user_relation", handleUserRelation)
-	http.HandleFunc("/user_category", handleUserCategory)
+	http.HandleFunc("/users/relation", handleUserRelation)
+	http.HandleFunc("/users/category", handleUserCategory)
 	//打印监听端口
 	log.Printf("Http服务器开始监听[%d]端口", config.HttpPort)
 	log.Println("*********************************************")
@@ -63,9 +63,18 @@ func handleLogin(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// 添加好友关系
+// 添加好友分类
 func handleUserCategory(resp http.ResponseWriter, req *http.Request) {
-	if req.Method == "POST" {
+	switch req.Method {
+	case "GET":
+		//获取好友列表
+		userId := req.FormValue("user_id")
+
+		categories := model.GetCategoriesByUserId(userId)
+		categories = model.GetBuddiesByCategories(categories)
+		resp.Write(common.NewIMResponseData(util.SetData("categories", categories), "").Encode())
+	case "POST":
+		// 添加好友列表
 		userId := req.FormValue("user_id")
 		name := req.FormValue("name")
 
@@ -80,8 +89,9 @@ func handleUserCategory(resp http.ResponseWriter, req *http.Request) {
 				resp.Write(common.NewIMResponseSimple(103, "添加分类失败", "").Encode())
 			}
 		}
-	} else {
+	default :
 		resp.Write(common.NewIMResponseSimple(404, "Not Found: "+req.Method, "").Encode())
+
 	}
 }
 

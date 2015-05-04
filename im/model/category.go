@@ -11,9 +11,11 @@ import (
 分组对象
 */
 type Category struct {
-	Id      string   `json:"id"`      //分组ID
-	Name    string   `json:"name"`    //分组名称
-	Buddies []User   `json:"buddies"` //好友列表
+	Id       string    `json:"id"`        // 分组ID
+	Name     string    `json:"name"`      // 分组名称
+	Creator  string    `json:"creator"`   // 分组名称
+	CreateAt time.Time `json:"create_at"` // 创建时间
+	Buddies  []User    `json:"buddies"`   // 好友列表
 }
 
 /*
@@ -54,6 +56,24 @@ func GetCategoriesByToken(token string) []Category {
 	return categories
 }
 
+/*
+ 根据UserId获取分组数据
+ */
+func GetCategoriesByUserId(token string) []Category {
+	var categories []Category
+	rows, _ := Database.Query("select * from im_category where creator=?", token)
+	defer rows.Close()
+	for rows.Next() {
+		var category Category
+		rows.Scan(&category.Id, &category.Name, &category.Creator, &category.CreateAt)
+		categories = append(categories, category)
+	}
+	return categories
+}
+
+/*
+ 添加好友分类
+ */
 func AddCategory(userId string, name string) int64 {
 	insStmt, _ := Database.Prepare("insert into im_category (id, name, creator, create_at) VALUES (?, ?, ?, ?)")
 	defer insStmt.Close()

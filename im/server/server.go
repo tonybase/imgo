@@ -186,7 +186,7 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 		// 获取好友分组列表
 		log.Println("获取好友列表：userId=%s", client.Login.UserId)
 		//return
-		categories := model.GetCategoriesByToken(client.Login.Token)
+		categories := model.GetCategoriesByUserId(client.Login.UserId)
 		categories = model.GetBuddiesByCategories(categories)
 		client.PutOut(common.NewIMResponseData(util.SetData("categories", categories), common.GET_BUDDY_LIST_RETURN))
 
