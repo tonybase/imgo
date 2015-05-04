@@ -144,7 +144,7 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 			client.PutOut(common.NewIMResponseSimple(301, "用户令牌不能为空!", common.GET_CONN_RETURN))
 			return
 		}
-		// 校验用户是否登录
+		// 校验用户是否登录，把Login数据放在client当中
 		client.Login = model.GetLoginByToken(token)
 		log.Printf("登录比较：token=%s Login=%s", token, client.Login)
 		if (!strings.EqualFold(client.Login.Token, token)) {
@@ -184,14 +184,9 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 	switch request.Command {
 	case common.GET_BUDDY_LIST:
 		// 获取好友分组列表
-		token := reqData["user"]["token"]
-		if token == "" {
-			client.PutOut(common.NewIMResponseSimple(301, "用户令牌不能为空!", common.GET_CONN_RETURN))
-			return
-		}
-		log.Println("获取好友列表：token=%s userId=%s", token, client.Login.UserId)
+		log.Println("获取好友列表：userId=%s", client.Login.UserId)
 		//return
-		categories := model.GetCategoriesByToken(token)
+		categories := model.GetCategoriesByToken(client.Login.Token)
 		categories = model.GetBuddiesByCategories(categories)
 		client.PutOut(common.NewIMResponseData(util.SetData("categories", categories), common.GET_BUDDY_LIST_RETURN))
 
@@ -199,7 +194,7 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 		// 创建会话  //{"command":"CREATE_SESSION","data":{"session":{"sender":"xxx","receiver":"xxx","token":"xxxx"}}}
 		sender := reqData["session"]["sender"]
 		receiver := reqData["session"]["receiver"]
-		token := reqData["session"]["token"]
+
 		if sender == "" {
 			client.PutOut(common.NewIMResponseSimple(301, "发送者不能为空!", common.CREATE_SESSION_RETURN))
 			return
@@ -208,17 +203,12 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 			client.PutOut(common.NewIMResponseSimple(302, "接收者不能为空!", common.CREATE_SESSION_RETURN))
 			return
 		}
-		if token == "" {
-			client.PutOut(common.NewIMResponseSimple(303, "用户令牌不能为空!", common.CREATE_SESSION_RETURN))
-			return
-		}
-		// user := model.GetUserById(reqData["session"]["token"])
 		conversationId := model.GetConversation(sender, receiver).Id
 		if conversationId == "" {
 			conversationId = model.AddConversation(sender, receiver)
 		}
 		if conversationId == "" {
-			client.PutOut(common.NewIMResponseSimple(304, "创建会话失败", common.GET_CONN_RETURN))
+			client.PutOut(common.NewIMResponseSimple(303, "创建会话失败", common.GET_CONN_RETURN))
 			return
 		} else {
 			data := make(map[string]string)
@@ -267,18 +257,12 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 		}
 
 	case common.SEND_STATUS_CHANGE:
-		//{"command":"SEND_STATUS_CHANGE","data":{"user":{"token":"xxxx","status":"1"}}}
-		token := reqData["user"]["token"]
 		status := reqData["user"]["status"]
-		if token == "" {
-			client.PutOut(common.NewIMResponseSimple(501, "TOKEN不能为空!", common.SEND_STATUS_CHANGE))
-			return
-		}
 		if status == "" {
-			client.PutOut(common.NewIMResponseSimple(501, "状态不能为空!", common.SEND_STATUS_CHANGE))
+			client.PutOut(common.NewIMResponseSimple(301, "状态不能为空!", common.SEND_STATUS_CHANGE))
 			return
 		}
-		user := model.GetUserByToken(token)
+		user := model.GetUserByToken(client.Login.Token)
 		//判断用户的合法性
 		if user.Id == "" {
 			//判断要求改变的状态和当前该用户的状态是否一致
@@ -294,17 +278,17 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 						this.clients[keys[i]].PutOut(common.NewIMResponseData(util.SetData("user", data), common.PUSH_STATUS_CHANGE))
 					}
 				} else {
-					client.PutOut(common.NewIMResponseSimple(501, "修改状态失败,请重新尝试!", common.SEND_STATUS_CHANGE))
+					client.PutOut(common.NewIMResponseSimple(304, "修改状态失败,请重新尝试!", common.SEND_STATUS_CHANGE))
 					return
 				}
 
 			} else {
-				client.PutOut(common.NewIMResponseSimple(501, "请退出重新登录!", common.SEND_STATUS_CHANGE))
+				client.PutOut(common.NewIMResponseSimple(303, "请退出重新登录!", common.SEND_STATUS_CHANGE))
 				return
 			}
 
 		} else {
-			client.PutOut(common.NewIMResponseSimple(501, "Token不合法!", common.SEND_STATUS_CHANGE))
+			client.PutOut(common.NewIMResponseSimple(302, "Token不合法!", common.SEND_STATUS_CHANGE))
 			return
 		}
 	case common.LOGOUT_REQUEST:
