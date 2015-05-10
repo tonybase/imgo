@@ -17,8 +17,8 @@ type Conversation struct {
 /*
  创建会话
  */
-func AddConversation(sender string, receiver string) string {
-	insertStmt, _ := Database.Prepare("insert into `im_conversation` VALUES (?, ?, ?, ?, ?)")
+func AddSession(sender string, receiver string) string {
+	insertStmt, _ := Database.Prepare("insert into `im_session` VALUES (?, ?, ?, ?, ?)")
 	defer insertStmt.Close()
 	id := uuid.New()
 	res, err := insertStmt.Exec(id, sender, receiver, "0", time.Now().Format("2006-01-02 15:04:05"))
@@ -36,9 +36,9 @@ func AddConversation(sender string, receiver string) string {
 	return id
 }
 
-func GetConversation(sender string, receiver string) Conversation {
+func GetSession(sender string, receiver string) Conversation {
 	var conv Conversation
-	rows, err := Database.Query("select * from im_conversation where creator=? and receiver=? ", sender, receiver)
+	rows, err := Database.Query("select * from im_session where creator=? and receiver=? ", sender, receiver)
 	if err != nil {
 		log.Printf("根据账号及密码查询用户错误: ", err)
 	}
@@ -58,9 +58,9 @@ func GetConversation(sender string, receiver string) Conversation {
 /*
  根据ID获取会话
  */
-func GetConversationById(id string) (*Conversation, error) {
+func GetSessionById(id string) (*Conversation, error) {
 	var conv Conversation
-	row := Database.QueryRow("select * from im_conversation where id=?", id)
+	row := Database.QueryRow("select * from im_session where id=?", id)
 	err := row.Scan(&conv.Id, &conv.Creator, &conv.Receiver, &conv.Type, &conv.Create_at)
 	if err != nil {
 		return nil, &DatabaseError{"根据ID获会话错误"}
@@ -74,7 +74,7 @@ func GetConversationById(id string) (*Conversation, error) {
  */
 func GetReceiverKeyByTicket(ticket string) ([]string, error) {
 	var keys []string
-	rows, err := Database.Query("select c1.`id` from im_conn c1 left join im_conversation c2 on c1.user_id=c2.receiver where c2.id=?", ticket)
+	rows, err := Database.Query("select c1.`id` from im_conn c1 left join im_session c2 on c1.user_id=c2.receiver where c2.id=?", ticket)
 	if err != nil {
 		return nil, &DatabaseError{"根据Ticket获取接收者Key和发送者ID错误"}
 	}

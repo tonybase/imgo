@@ -49,14 +49,3 @@ func (this *IMResponse) Decode(data []byte) error {
 	return err
 }
 
-/*
-将JSON转成返回消息(重载写法)
-*/
-func DecodeIMResponse(data []byte) (*IMResponse, error) {
-	resp := new(IMResponse)
-	err := resp.Decode(data)
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
-}

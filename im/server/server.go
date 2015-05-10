@@ -223,9 +223,9 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 			client.PutOut(common.NewIMResponseSimple(302, "接收者不能为空!", common.CREATE_SESSION_RETURN))
 			return
 		}
-		conversationId := model.GetConversation(sender, receiver).Id
+		conversationId := model.GetSession(sender, receiver).Id
 		if conversationId == "" {
-			conversationId = model.AddConversation(sender, receiver)
+			conversationId = model.AddSession(sender, receiver)
 		}
 		if conversationId == "" {
 			client.PutOut(common.NewIMResponseSimple(303, "创建会话失败", common.GET_CONN_RETURN))
@@ -249,7 +249,7 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 			client.PutOut(common.NewIMResponseSimple(302, "消息内容不能为空!", common.SEND_MSG_RETURN))
 			return
 		}
-		conversion, err := model.GetConversationById(ticket)
+		conversion, err := model.GetSessionById(ticket)
 		if err != nil {
 			client.PutOut(common.NewIMResponseSimple(300, err.Error(), common.SEND_MSG_RETURN))
 			return
