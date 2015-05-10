@@ -1,6 +1,5 @@
 package model
 import (
-	"log"
 	"code.google.com/p/go-uuid/uuid"
 	"time"
 )
@@ -16,32 +15,29 @@ type Login struct {
 /*
  根据token获取用户登录
  */
-func GetLoginByToken(token string) Login {
+func GetLoginByToken(token string) (*Login, error) {
 	var login Login
 	row := Database.QueryRow("select id, user_id, token, login_at, login_ip from im_login where token=?", token)
 	err := row.Scan(&login.Id, &login.UserId, &login.Token, &login.LoginAt, &login.LoginIp)
 	if err != nil {
-		log.Println("根据Token获取用户登录错误", err)
+		return nil, &DatabaseError{"根据Token获取用户登录错误"}
 	}
-	return login
-
+	return &login, nil
 }
 
 /*
  保存登录状态
  */
-func SaveLogin(userId string, token string, ip string) int64 {
-	insStmt, _ := Database.Prepare("insert into im_login (id, user_id, token, login_at, login_ip) VALUES (?, ?, ?, ?,?)")
+func SaveLogin(userId string, token string, ip string) (*string, error) {
+	insStmt, errStmt := Database.Prepare("insert into im_login (id, user_id, token, login_at, login_ip) VALUES (?, ?, ?, ?,?)")
+	if errStmt != nil {
+		return nil, &DatabaseError{"保存用户登录记录错误，数据库语句错误"}
+	}
 	defer insStmt.Close()
-	res, err := insStmt.Exec(uuid.New(), userId, token, time.Now().Format("2006-01-02 15:04:05"), ip)
+	id := uuid.New();
+	_, err := insStmt.Exec(id, userId, token, time.Now().Format("2006-01-02 15:04:05"), ip)
 	if err != nil {
-		log.Printf("保存用户登录记录错误: ", err)
-		return 0
+		return nil, &DatabaseError{"保存用户登录记录错误"}
 	}
-	num, err := res.RowsAffected()
-	if err != nil {
-		log.Printf("读取保存用户登录记录影响行数错误:", err)
-		return 0
-	}
-	return num
+	return &id, nil
 }

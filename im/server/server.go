@@ -109,9 +109,9 @@ func (this *Server) quitHandler(client *common.Client) {
 	if client != nil {
 		// 判断要求改变的状态和当前该用户的状态是否一致
 		model.DeleteConnByKey(client.Key)
-		count := model.CountConnByKey(client.Key)
+		count, _ := model.CountConnByKey(client.Key)
 		// 如果没有这用户的连接，同时更新用户状态为离线
-		if (count == 0) {
+		if (count == 0 && client.Login != nil) {
 			model.UpdateUserStatus(client.Login.UserId, "0")
 		}
 
@@ -145,38 +145,50 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 			return
 		}
 		// 校验用户是否登录，把Login数据放在client当中
-		client.Login = model.GetLoginByToken(token)
+		login, err := model.GetLoginByToken(token)
+		if (err != nil) {
+			client.PutOut(common.NewIMResponseSimple(300, err.Error(), common.GET_CONN_RETURN))
+			return
+		}
+		client.Login = login;
 		log.Printf("登录比较：token=%s Login=%s", token, client.Login)
 		if (!strings.EqualFold(client.Login.Token, token)) {
 			client.PutOut(common.NewIMResponseSimple(302, "该用户令牌无效!", common.GET_CONN_RETURN))
 			return
 		}
 		if client.Login.Id != "" {
-			// 更新在线状态
-			if model.UpdateUserStatus(client.Login.UserId, "1") {
-				// 创建或者更新连接信息
-				conn := model.GetConnByToken(token)
-				var num int64
-				if conn.UserId != "" {
-					num = model.UpdateConnByToken(client.Key, client.Login.UserId, token)
-				} else {
-					num = model.AddConn(client.Key, client.Login.UserId, token)
-				}
-				data := make(map[string]interface{})
-				data["status"] = num
-				client.PutOut(common.NewIMResponseData(util.SetData("conn", data), common.GET_CONN_RETURN))
-				return
-			} else {
+			// 更新在线状态，如果现在已经是在线，然后再设置在线，影响行还是为0
+			_, err := model.UpdateUserStatus(client.Login.UserId, "1")
+			if err != nil {
 				client.PutOut(common.NewIMResponseSimple(304, "设置用户状态失败!", common.GET_CONN_RETURN))
 				return
 			}
+			// 创建或者更新连接信息 这个error不能handler，当没有数据时会为 sql: no rows in result set
+			conn, _ := model.GetConnByToken(token)
+			if conn != nil {
+				_, err := model.UpdateConnByToken(client.Key, client.Login.UserId, token)
+				if err != nil {
+					client.PutOut(common.NewIMResponseSimple(300, err.Error(), common.GET_CONN_RETURN))
+					return
+				}
+			} else {
+				_, err := model.AddConn(client.Key, client.Login.UserId, token)
+				if err != nil {
+					client.PutOut(common.NewIMResponseSimple(300, err.Error(), common.GET_CONN_RETURN))
+					return
+				}
+			}
+			data := make(map[string]interface{})
+			data["status"] = 1
+			client.PutOut(common.NewIMResponseData(util.SetData("conn", data), common.GET_CONN_RETURN))
+			return
 		} else {
 			client.PutOut(common.NewIMResponseSimple(303, "用户未登录!", common.GET_CONN_RETURN))
 			return
 		}
 	}
 	// 校验连接是已经授权
-	if client.Login.Id == "" {
+	if client.Login == nil {
 		client.PutOut(common.NewIMResponseSimple(401, "用户未登录!", common.UNAUTHORIZED))
 		return
 	}
@@ -186,8 +198,16 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 		// 获取好友分组列表
 		log.Println("获取好友列表：userId=%s", client.Login.UserId)
 		//return
-		categories := model.GetCategoriesByUserId(client.Login.UserId)
-		categories = model.GetBuddiesByCategories(categories)
+		categories, err := model.GetCategoriesByUserId(client.Login.UserId)
+		if err != nil {
+			client.PutOut(common.NewIMResponseSimple(301, "获取好友分类错误!", common.GET_BUDDY_LIST_RETURN))
+			return
+		}
+		categories, err = model.GetBuddiesByCategories(categories)
+		if err != nil {
+			client.PutOut(common.NewIMResponseSimple(300, err.Error(), common.GET_BUDDY_LIST_RETURN))
+			return
+		}
 		client.PutOut(common.NewIMResponseData(util.SetData("categories", categories), common.GET_BUDDY_LIST_RETURN))
 
 	case common.CREATE_SESSION:
@@ -229,10 +249,18 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 			client.PutOut(common.NewIMResponseSimple(302, "消息内容不能为空!", common.SEND_MSG_RETURN))
 			return
 		}
-		conversion := model.GetConversationById(ticket)
+		conversion, err := model.GetConversationById(ticket)
+		if err != nil {
+			client.PutOut(common.NewIMResponseSimple(300, err.Error(), common.SEND_MSG_RETURN))
+			return
+		}
 		if conversion.Id != "" {
 			isSent := false
-			keys := model.GetReceiverKeyByTicket(reqData["message"]["ticket"])
+			keys, err := model.GetReceiverKeyByTicket(reqData["message"]["ticket"])
+			if err != nil {
+				client.PutOut(common.NewIMResponseSimple(300, err.Error(), common.SEND_MSG_RETURN))
+				return
+			}
 			for _, key := range keys {
 				if this.clients[key] == nil {
 					// client.PutOut(common.NewIMResponseSimple(402, "对方还未登录!", common.SEND_MSG_RETURN))
@@ -262,26 +290,33 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 			client.PutOut(common.NewIMResponseSimple(301, "状态不能为空!", common.SEND_STATUS_CHANGE))
 			return
 		}
-		user := model.GetUserByToken(client.Login.Token)
+		user, err := model.GetUserByToken(client.Login.Token)
+		if err != nil {
+			client.PutOut(common.NewIMResponseSimple(300, err.Error(), common.SEND_STATUS_CHANGE))
+			return
+		}
 		//判断用户的合法性
 		if user.Id == "" {
 			//判断要求改变的状态和当前该用户的状态是否一致
 			if strings.EqualFold(user.Status, status) {
 				//FIXME 此处不做如果状态是离线就删除用户连接的操作,状态改变认为是客户端手动操作或者网络异常
-				if model.UpdateUserStatus(user.Id, status) {
-					keys := model.GetBuddiesKeyById(user.Id)
-					for i := 0; i < len(keys); i++ {
-						//给对应的连接推送好友状态变化的通知
-						data := make(map[string]string)
-						data["id"] = user.Id
-						data["state"] = reqData["user"]["status"]
-						this.clients[keys[i]].PutOut(common.NewIMResponseData(util.SetData("user", data), common.PUSH_STATUS_CHANGE))
-					}
-				} else {
-					client.PutOut(common.NewIMResponseSimple(304, "修改状态失败,请重新尝试!", common.SEND_STATUS_CHANGE))
+				_, err := model.UpdateUserStatus(user.Id, status)
+				if err != nil {
+					client.PutOut(common.NewIMResponseSimple(304, err.Error(), common.SEND_STATUS_CHANGE))
 					return
 				}
-
+				keys, err := model.GetBuddiesKeyById(user.Id)
+				if err != nil {
+					client.PutOut(common.NewIMResponseSimple(300, err.Error(), common.SEND_STATUS_CHANGE))
+					return
+				}
+				for i := 0; i < len(keys); i++ {
+					//给对应的连接推送好友状态变化的通知
+					data := make(map[string]string)
+					data["id"] = user.Id
+					data["state"] = reqData["user"]["status"]
+					this.clients[keys[i]].PutOut(common.NewIMResponseData(util.SetData("user", data), common.PUSH_STATUS_CHANGE))
+				}
 			} else {
 				client.PutOut(common.NewIMResponseSimple(303, "请退出重新登录!", common.SEND_STATUS_CHANGE))
 				return

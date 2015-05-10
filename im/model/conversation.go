@@ -58,26 +58,25 @@ func GetConversation(sender string, receiver string) Conversation {
 /*
  根据ID获取会话
  */
-func GetConversationById(id string) Conversation {
+func GetConversationById(id string) (*Conversation, error) {
 	var conv Conversation
 	row := Database.QueryRow("select * from im_conversation where id=?", id)
 	err := row.Scan(&conv.Id, &conv.Creator, &conv.Receiver, &conv.Type, &conv.Create_at)
 	if err != nil {
-		log.Println("根据ID获会话错误", err)
+		return nil, &DatabaseError{"根据ID获会话错误"}
 	}
-	return conv
+	return &conv, nil
 
 }
 
 /*
  根据ticket获取会话
  */
-func GetReceiverKeyByTicket(ticket string) []string {
+func GetReceiverKeyByTicket(ticket string) ([]string, error) {
 	var keys []string
 	rows, err := Database.Query("select c1.`id` from im_conn c1 left join im_conversation c2 on c1.user_id=c2.receiver where c2.id=?", ticket)
 	if err != nil {
-		log.Println("根据Ticket获取接收者Key和发送者ID错误:", err)
-		return nil
+		return nil, &DatabaseError{"根据Ticket获取接收者Key和发送者ID错误"}
 	}
 	for rows.Next() {
 		var key string
@@ -85,5 +84,5 @@ func GetReceiverKeyByTicket(ticket string) []string {
 
 		keys = append(keys, key)
 	}
-	return keys
+	return keys, nil
 }

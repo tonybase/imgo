@@ -4,7 +4,6 @@ import (
 	"code.google.com/p/go-uuid/uuid"
 	"database/sql"
 	"encoding/json"
-	"log"
 	"time"
 )
 
@@ -40,156 +39,156 @@ func (this *User) Decode(data []byte) error {
 /*
  检查账号是否存在
  */
-func CheckAccount(account string) int {
+func CheckAccount(account string) (int, error) {
 	var num int
 	rows, err := Database.Query("select count(*) from im_user where account=? ", account)
-
 	if err != nil {
-		log.Printf("根据账号查询用户错误: ", err)
+		return -1, &DatabaseError{"根据账号查询用户错误"}
 	}
 	defer rows.Close()
 	for rows.Next() {
 		rows.Scan(&num)
 	}
-	return num
+	return num, nil
 
 }
 
 /*
  根据ID获取用户
  */
-func GetUserById(id string) User {
+func GetUserById(id string) (*User, error) {
 	var user User
 	row := Database.QueryRow("select id, nick, status, sign, avatar, create_at, update_at from im_user where id=?", id)
 	err := row.Scan(&user.Id, &user.Nick, &user.Status, &user.Sign, &user.Avatar, &user.CreateAt, &user.UpdateAt)
 	if err != nil {
-		log.Printf("根据ID查询用户-将结果映射至对象错误: %s", err.Error())
+		return nil, &DatabaseError{"根据ID查询用户-将结果映射至对象错误"}
 	}
-	return user
+	return &user, err
 }
 
 /*
  根据token获取用户
  */
-func GetUserByToken(token string) User {
+func GetUserByToken(token string) (*User, error) {
 	var user User
 	row := Database.QueryRow("select u.id, u.nick, u.status, u.sign, u.avatar, u.create_at, u.update_at from  im_user u left join im_login l on u.id=l.user_id where l.token=?", token)
 	err := row.Scan(&user.Id, &user.Nick, &user.Status, &user.Sign, &user.Avatar, &user.CreateAt, &user.UpdateAt)
 	if err != nil {
-		log.Printf("根据Token查询用户-将结果映射至对象错误: %s", err.Error())
-		return user
+		return nil, &DatabaseError{"根据Token查询用户-将结果映射至对象错误"}
 	}
-	return user
+	return &user, nil
 }
 
 /*
  根据分组获取好友列表
  */
-func GetBuddiesByCategories(categories []Category) []Category {
+func GetBuddiesByCategories(categories []Category) ([]Category, error) {
 	for k, v := range categories {
-		rows, _ := Database.Query("select u.id, u.nick, u.status, u.sign, u.avatar, u.create_at, u.update_at from im_user u left join im_relation_user_category ug on u.id=ug.user_id where ug.category_id=?", v.Id)
+		rows, err := Database.Query("select u.id, u.nick, u.status, u.sign, u.avatar, u.create_at, u.update_at from im_user u left join im_relation_user_category ug on u.id=ug.user_id where ug.category_id=?", v.Id)
+		if err != nil {
+			return categories, &DatabaseError{"根据分类查询好友列表错误"}
+		}
 		for rows.Next() {
 			var user User
 			rows.Scan(&user.Id, &user.Nick, &user.Status, &user.Sign, &user.Avatar, &user.CreateAt, &user.UpdateAt)
 			categories[k].AddUser(user)
 		}
 	}
-	return categories
+	return categories, nil
 }
 
 /*
  登录账号
  */
-func LoginUser(account string, password string) User {
+func LoginUser(account string, password string) (*User, error) {
 	var user User
 	rows, err := Database.Query("select id, nick, status, sign, avatar, create_at, update_at from im_user where account=? and password=? ", account, password)
 	if err != nil {
-		log.Printf("根据账号及密码查询用户错误: ", err)
+		return nil, &DatabaseError{"根据账号及密码查询用户错误"}
 	}
 	defer rows.Close()
 	for rows.Next() {
 		err := rows.Scan(&user.Id, &user.Nick, &user.Status, &user.Sign, &user.Avatar, &user.CreateAt, &user.UpdateAt)
 		if err != nil {
-			log.Printf("根据账号及密码查询结果映射至对象错误:", err)
+			return nil, &DatabaseError{"根据账号及密码查询结果映射至对象错误"}
 		}
 	}
-	return user
+	return &user, nil
 }
 
 /*
  保存用户
  */
-func SaveUser(account string, password string, nick string, avatar string) int64 {
-	insStmt, _ := Database.Prepare("insert into im_user (id, account, password, nick, avatar, create_at, update_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
+func SaveUser(account string, password string, nick string, avatar string) (*string, error) {
+	insStmt, err := Database.Prepare("insert into im_user (id, account, password, nick, avatar, create_at, update_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
+	if err != nil {
+		return nil, &DatabaseError{"保存用户数据库处理错误"}
+	}
 	defer insStmt.Close()
 	now := time.Now().Format("2006-01-02 15:04:05")
 	uid := uuid.New()
-	res, err := insStmt.Exec(uid, account, password, nick, avatar, now, now)
+	_, err = insStmt.Exec(uid, account, password, nick, avatar, now, now)
 	if err != nil {
-		log.Printf("保存用户记录错误: ", err)
-		return 0
-	}
-	num, err := res.RowsAffected()
-	if err != nil {
-		log.Printf("读取保存用户记录影响行数错误:", err)
-		return 0
+		return nil, &DatabaseError{"保存用户记录错误"}
 	}
 	// 添加默认分类
 	AddCategory(uid, "我的好友");
-	return num
+	return &uid, nil
 }
 
 /*
  修改用户状态
  */
-func UpdateUserStatus(userId string, status string) bool {
+func UpdateUserStatus(userId string, status string) (int64, error) {
 	updateStmt, _ := Database.Prepare("UPDATE im_user SET `status` = ? WHERE id =?")
 	defer updateStmt.Close()
 	res, err := updateStmt.Exec(status, userId)
 	if err != nil {
-		log.Println("更新用户状态错误:", err)
-		return false
+		return -1, &DatabaseError{"更新用户状态错误"}
 	}
-	_, err = res.RowsAffected()
+	num, err := res.RowsAffected();
 	if err != nil {
-		log.Println("读取修改用户状态影响行数错误:", err)
-		return false
+		return -1, &DatabaseError{"读取修改用户状态影响行数错误"}
 	}
-	return true
+	return num, nil
 }
 
 /*
  修改用户状态(事务)
  */
-func UpdateUserStatusTx(tx *sql.Tx, userId string, status string) int64 {
+func UpdateUserStatusTx(tx *sql.Tx, userId string, status string) (int64, error) {
 	var num int64
-	updateStmt, _ := tx.Prepare("UPDATE im_user SET `status` = ? WHERE id =?")
+	updateStmt, err := tx.Prepare("UPDATE im_user SET `status` = ? WHERE id =?")
+	if err != nil {
+		return -1, &DatabaseError{"修改用户状态数据库处理错误"}
+	}
 	defer updateStmt.Close()
 	res, err := updateStmt.Exec(status, userId)
 	if err != nil {
 		tx.Rollback()
-		log.Println("更新用户状态错误:", err)
-		return 0
+		return -1, &DatabaseError{"更新用户状态错误"}
 	}
 	num, err = res.RowsAffected()
 	if err != nil {
 		tx.Rollback()
-		log.Println("读取修改用户状态影响行数错误:", err)
-		return 0
+		return -1, &DatabaseError{"读取修改用户状态影响行数错误"}
 	}
-	return num
+	return num, nil
 }
 
 /*
  根据用户ID获取在线好友的连接KEY列表
  */
-func GetBuddiesKeyById(id string) []string {
+func GetBuddiesKeyById(id string) ([]string, error) {
 	var keys []string
-	rows, _ := Database.Query("select co.`id` from im_conn co where co.user_id in (select ug.user_id from im_relation_user_category ug where ug.category_id in (select g.id from im_category g where g.creator=?))", id)
+	rows, err := Database.Query("select co.`id` from im_conn co where co.user_id in (select ug.user_id from im_relation_user_category ug where ug.category_id in (select g.id from im_category g where g.creator=?))", id)
+	if err != nil {
+		return keys, &DatabaseError{"根据用户ID获取在线好友的连接KEY列表错误"}
+	}
 	for rows.Next() {
 		var key string
 		rows.Scan(&key)
 		keys = append(keys, key)
 	}
-	return keys
+	return keys, nil
 }

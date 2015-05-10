@@ -1,7 +1,6 @@
 package model
 import (
 	"time"
-	"log"
 )
 
 type UserRelation struct {
@@ -10,18 +9,22 @@ type UserRelation struct {
 	CreateAt time.Time   `json:"create_at"`
 }
 
-func AddFriendRelation(userId string, categoryId string) int64 {
-	insStmt, _ := Database.Prepare("insert into im_relation_user_category (user_id, category_id, create_at) VALUES (?, ?, ?)")
+/**
+ 添加好友关系数据库
+ */
+func AddFriendRelation(userId string, categoryId string) (int64, error) {
+	insStmt, err := Database.Prepare("insert into im_relation_user_category (user_id, category_id, create_at) VALUES (?, ?, ?)")
+	if err != nil {
+		return -1, &DatabaseError{"添加好友关系数据库处理错误"}
+	}
 	defer insStmt.Close()
 	res, err := insStmt.Exec(userId, categoryId, time.Now().Format("2006-01-02 15:04:05"))
 	if err != nil {
-		log.Printf("保存好友分类记录错误: ", err)
-		return 0
+		return -1, &DatabaseError{"保存好友分类记录错误"}
 	}
 	num, err := res.RowsAffected()
 	if err != nil {
-		log.Printf("读取保存好友分类记录影响行数错误:", err)
-		return 0
+		return -1, &DatabaseError{"读取保存好友分类记录影响行数错误"}
 	}
-	return num
+	return num, nil
 }

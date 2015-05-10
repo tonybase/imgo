@@ -20,7 +20,7 @@ type Client struct {
 	reader *bufio.Reader //读取
 	writer *bufio.Writer //输出
 	// 登录信息
-	Login  model.Login   //客户端用户ID
+	Login  *model.Login   //客户端用户ID
 }
 
 /*

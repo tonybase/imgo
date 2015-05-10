@@ -53,9 +53,9 @@ func handleLogin(resp http.ResponseWriter, req *http.Request) {
 		account := req.FormValue("account")
 		password := req.FormValue("password")
 
-		log.Printf("ip %s", ip)
-		log.Printf("account %s", account)
-		log.Printf("password %s", password)
+		//		log.Printf("ip %s", ip)
+		//		log.Printf("account %s", account)
+		//		log.Printf("password %s", password)
 
 		login(resp, account, password, ip)
 	} else {
@@ -70,8 +70,16 @@ func handleUserCategory(resp http.ResponseWriter, req *http.Request) {
 		//获取好友列表
 		userId := req.FormValue("user_id")
 
-		categories := model.GetCategoriesByUserId(userId)
-		categories = model.GetBuddiesByCategories(categories)
+		categories, err := model.GetCategoriesByUserId(userId)
+		if (err != nil) {
+			resp.Write(common.NewIMResponseSimple(100, err.Error(), "").Encode())
+			return
+		}
+		categories, err = model.GetBuddiesByCategories(categories)
+		if (err != nil) {
+			resp.Write(common.NewIMResponseSimple(100, err.Error(), "").Encode())
+			return
+		}
 		resp.Write(common.NewIMResponseData(util.SetData("categories", categories), "").Encode())
 	case "POST":
 		// 添加好友列表
@@ -83,10 +91,11 @@ func handleUserCategory(resp http.ResponseWriter, req *http.Request) {
 		} else if name == "" {
 			resp.Write(common.NewIMResponseSimple(102, "类别名称不能为空", "").Encode())
 		} else {
-			if model.AddCategory(userId, name) > 0 {
-				resp.Write(common.NewIMResponseSimple(0, "添加分类成功", "").Encode())
+			_, err := model.AddCategory(userId, name)
+			if err != nil {
+				resp.Write(common.NewIMResponseSimple(103, err.Error(), "").Encode())
 			} else {
-				resp.Write(common.NewIMResponseSimple(103, "添加分类失败", "").Encode())
+				resp.Write(common.NewIMResponseSimple(0, "添加分类成功", "").Encode())
 			}
 		}
 	default :
@@ -105,7 +114,12 @@ func handleUserRelation(resp http.ResponseWriter, req *http.Request) {
 		} else if categoryId == "" {
 			resp.Write(common.NewIMResponseSimple(102, "类别ID不能为空", "").Encode())
 		} else {
-			if model.AddFriendRelation(userId, categoryId) > 0 {
+			num, err := model.AddFriendRelation(userId, categoryId)
+			if err != nil {
+				resp.Write(common.NewIMResponseSimple(100, err.Error(), "").Encode())
+				return
+			}
+			if num > 0 {
 				resp.Write(common.NewIMResponseSimple(0, "已建立好友关系", "").Encode())
 			} else {
 				resp.Write(common.NewIMResponseSimple(103, "建立好友关系失败", "").Encode())
@@ -123,13 +137,22 @@ func login(resp http.ResponseWriter, account string, password string, ip string)
 	} else if password == "" {
 		resp.Write(common.NewIMResponseSimple(102, "密码不能为空", "").Encode())
 	} else {
-		var user model.User
-		num := model.CheckAccount(account)
+		num, err := model.CheckAccount(account)
+		if err != nil {
+			resp.Write(common.NewIMResponseSimple(100, err.Error(), "").Encode())
+			return
+		}
 		if num > 0 {
-			user = model.LoginUser(account, password)
+			user, err := model.LoginUser(account, password)
+			if err != nil {
+				resp.Write(common.NewIMResponseSimple(100, err.Error(), "").Encode())
+				return
+			}
 			if !strings.EqualFold(user.Id, "") {
 				token := uuid.New()
-				if model.SaveLogin(user.Id, token, ip) > 0 {
+				if _, err := model.SaveLogin(user.Id, token, ip); err != nil {
+					resp.Write(common.NewIMResponseSimple(100, err.Error(), "").Encode())
+				} else {
 					returnData := make(map[string]string)
 					returnData["id"] = user.Id
 					returnData["nick"] = user.Nick
@@ -137,8 +160,6 @@ func login(resp http.ResponseWriter, account string, password string, ip string)
 					returnData["status"] = user.Status
 					returnData["token"] = token //token uuid 带 横杠
 					resp.Write(common.NewIMResponseData(util.SetData("user", returnData), "LOGIN_RETURN").Encode())
-				} else {
-					resp.Write(common.NewIMResponseSimple(105, "保存登录记录错误,请稍后再试", "").Encode())
 				}
 			} else {
 				resp.Write(common.NewIMResponseSimple(104, "密码错误", "").Encode())
@@ -165,11 +186,19 @@ func register(resp http.ResponseWriter, account string, password string, nick st
 	} else if nick == "" {
 		resp.Write(common.NewIMResponseSimple(103, "昵称不能为空", "").Encode())
 	} else {
-		num := model.CheckAccount(account)
+		num, err := model.CheckAccount(account)
+		if err != nil {
+			resp.Write(common.NewIMResponseSimple(103, err.Error(), "").Encode())
+			return
+		}
 		if num > 0 {
 			resp.Write(common.NewIMResponseSimple(104, "用户名已存在", "").Encode())
 		} else {
-			num := model.SaveUser(account, password, nick, avatar)
+			_, err := model.SaveUser(account, password, nick, avatar)
+			if err != nil {
+				resp.Write(common.NewIMResponseSimple(104, err.Error(), "").Encode())
+				return
+			}
 			if (num > 0) {
 				resp.Write(common.NewIMResponseSimple(0, "注册成功", "").Encode())
 			} else {
