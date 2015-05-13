@@ -211,7 +211,7 @@ func QueryUser(clumn string, reg string, data string) ([]User, error) {
 	for rows.Next() {
 		var user User
 		rows.Scan(&user.Id, &user.Nick, &user.Status, &user.Sign, &user.Avatar, &user.CreateAt, &user.UpdateAt)
-		append(users, user)
+		users=append(users, user)
 	}
 
 	return users, nil
