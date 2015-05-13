@@ -206,7 +206,7 @@ func QueryUser(clumn string, reg string, data string) ([]User, error) {
 	}
 	rows, err := Database.Query(sql, data)
 	if err != nil {
-		return keys, &DatabaseError{"根据" + clumn + "查询用户错误"}
+		return users, &DatabaseError{"根据" + clumn + "查询用户错误"}
 	}
 	for rows.Next() {
 		var user User

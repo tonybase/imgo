@@ -57,7 +57,45 @@ func GetCategoriesByToken(token string) ([]Category, error) {
 	}
 	return categories, nil
 }
-
+/*
+根据ID删除好友分类
+*/
+func DelCategoryById(categoryId string)(int64, error){
+	delStmt, err := Database.Prepare("delete from im_category where id=? ")
+	if err != nil {
+		return -1, &DatabaseError{"删除好友分类数据库处理错误"}
+	}
+	defer delStmt.Close()
+	res, err := delStmt.Exec(categoryId)
+	if err != nil {
+		return -1, &DatabaseError{"删除好友分类记录错误"}
+	}
+	num, err := res.RowsAffected()
+	if err != nil {
+		return -1, &DatabaseError{"读取删除好友分类记录影响行数错误"}
+	}
+	return num, nil
+}
+/*
+根据ID修改好友分类名称
+*/
+func EditCategoryById(categoryId string,categoryName string)(int64, error){
+	var num int64
+	updateStmt, err := Database.Prepare("UPDATE im_category SET `name` = ? WHERE id =?")
+	if err != nil {
+		return -1, &DatabaseError{"修改好友分类数据库处理错误"}
+	}
+	defer updateStmt.Close()
+	res, err := updateStmt.Exec(categoryName, categoryId)
+	if err != nil {
+		return -1, &DatabaseError{"更新好友分类错误"}
+	}
+	num, err = res.RowsAffected()
+	if err != nil {
+		return -1, &DatabaseError{"读取修改好友分类影响行数错误"}
+	}
+	return num, nil
+}
 /*
  根据UserId获取分组数据
  */

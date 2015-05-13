@@ -28,3 +28,22 @@ func AddFriendRelation(userId string, categoryId string) (int64, error) {
 	}
 	return num, nil
 }
+/**
+ 删除好友关系数据库
+ */
+func DelFriendRelation(userId string, categoryId string) (int64, error) {
+	delStmt, err := Database.Prepare("delete from im_relation_user_category where user_id=? and category_id=? ")
+	if err != nil {
+		return -1, &DatabaseError{"删除好友关系数据库处理错误"}
+	}
+	defer delStmt.Close()
+	res, err := delStmt.Exec(userId, categoryId)
+	if err != nil {
+		return -1, &DatabaseError{"删除好友关系记录错误"}
+	}
+	num, err := res.RowsAffected()
+	if err != nil {
+		return -1, &DatabaseError{"读取删除好友关系记录影响行数错误"}
+	}
+	return num, nil
+}
