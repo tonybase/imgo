@@ -18,8 +18,12 @@ func StartHttpServer(config util.IMConfig) error {
 	// 设置请求映射地址及对应处理方法
 	http.HandleFunc("/register", handleRegister)
 	http.HandleFunc("/login", handleLogin)
-	http.HandleFunc("/users/relation", handleUserRelation)
-	http.HandleFunc("/users/category", handleUserCategory)
+	http.HandleFunc("/query", handleQuery)
+	http.HandleFunc("/users/relation/add", handleUserRelationAdd)
+	http.HandleFunc("/users/relation/del", handleUserRelationDel)
+	http.HandleFunc("/users/category/add", handleUserCategoryAdd)
+	http.HandleFunc("/users/category/del", handleUserCategoryDel)
+	http.HandleFunc("/users/category/edit", handleUserCategoryEdit)
 	//打印监听端口
 	log.Printf("Http服务器开始监听[%d]端口", config.HttpPort)
 	log.Println("*********************************************")
@@ -45,38 +49,51 @@ func handleRegister(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// 登录请求处理方法
+/**
+登录请求处理方法
+*/
 func handleLogin(resp http.ResponseWriter, req *http.Request) {
 	// POST登录请求
 	if req.Method == "POST" {
 		ip := util.GetIp(req)
 		account := req.FormValue("account")
 		password := req.FormValue("password")
-
-		//		log.Printf("ip %s", ip)
-		//		log.Printf("account %s", account)
-		//		log.Printf("password %s", password)
-
 		login(resp, account, password, ip)
 	} else {
 		resp.Write(common.NewIMResponseSimple(404, "Not Found: "+req.Method, "").Encode())
 	}
 }
 
+/**
+查询请求处理方法
+*/
+func handleQuery(resp http.ResponseWriter, req *http.Request) {
+	// GET登录请求
+	if req.Method == "GET" {
+		nick := req.FormValue("nick")
+		users, err := model.QueryUser("nick", "like", nick)
+		if err != nil {
+			resp.Write(common.NewIMResponseData(util.SetData("users", users), "").Encode())
+		}
+	} else {
+		resp.Write(common.NewIMResponseSimple(404, "Not Found: "+req.Method, "").Encode())
+	}
+}
+
 // 添加好友分类
-func handleUserCategory(resp http.ResponseWriter, req *http.Request) {
+func handleUserCategoryAdd(resp http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "GET":
 		//获取好友列表
 		userId := req.FormValue("user_id")
 
 		categories, err := model.GetCategoriesByUserId(userId)
-		if (err != nil) {
+		if err != nil {
 			resp.Write(common.NewIMResponseSimple(100, err.Error(), "").Encode())
 			return
 		}
 		categories, err = model.GetBuddiesByCategories(categories)
-		if (err != nil) {
+		if err != nil {
 			resp.Write(common.NewIMResponseSimple(100, err.Error(), "").Encode())
 			return
 		}
@@ -98,14 +115,14 @@ func handleUserCategory(resp http.ResponseWriter, req *http.Request) {
 				resp.Write(common.NewIMResponseSimple(0, "添加分类成功", "").Encode())
 			}
 		}
-	default :
+	default:
 		resp.Write(common.NewIMResponseSimple(404, "Not Found: "+req.Method, "").Encode())
 
 	}
 }
 
 // 添加好友关系
-func handleUserRelation(resp http.ResponseWriter, req *http.Request) {
+func handleUserRelationAdd(resp http.ResponseWriter, req *http.Request) {
 	if req.Method == "POST" {
 		userId := req.FormValue("user_id")
 		categoryId := req.FormValue("category_id")
@@ -177,7 +194,7 @@ func login(resp http.ResponseWriter, account string, password string, ip string)
  103	用户名已存在
  104	昵称不能为空
  105	注册失败
- */
+*/
 func register(resp http.ResponseWriter, account string, password string, nick string, avatar string) {
 	if account == "" {
 		resp.Write(common.NewIMResponseSimple(101, "账号不能为空", "").Encode())
@@ -199,7 +216,7 @@ func register(resp http.ResponseWriter, account string, password string, nick st
 				resp.Write(common.NewIMResponseSimple(104, err.Error(), "").Encode())
 				return
 			}
-			if (num > 0) {
+			if num > 0 {
 				resp.Write(common.NewIMResponseSimple(0, "注册成功", "").Encode())
 			} else {
 				resp.Write(common.NewIMResponseSimple(105, "注册失败", "").Encode())
