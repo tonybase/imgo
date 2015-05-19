@@ -19,6 +19,7 @@ type User struct {
 	Avatar   string    `json:"avatar"`    //头像
 	CreateAt time.Time `json:"create_at"` //注册日期
 	UpdateAt time.Time `json:"update_at"` //更新日期
+	Token    string    `json:"token"`
 }
 
 /*
@@ -211,7 +212,7 @@ func QueryUser(clumn string, reg string, data string) ([]User, error) {
 	for rows.Next() {
 		var user User
 		rows.Scan(&user.Id, &user.Nick, &user.Status, &user.Sign, &user.Avatar, &user.CreateAt, &user.UpdateAt)
-		users=append(users, user)
+		users = append(users, user)
 	}
 
 	return users, nil
