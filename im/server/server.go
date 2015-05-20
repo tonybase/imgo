@@ -8,9 +8,9 @@ import (
 	"im-go/im/util"
 	"log"
 	"net"
-	"strings"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 )
 
@@ -27,7 +27,7 @@ type Server struct {
 
 /*
  IM服务启动方法
- */
+*/
 func StartIMServer(config util.IMConfig) {
 	log.Println("服务端启动中...")
 	//初始化服务端
@@ -47,7 +47,7 @@ func StartIMServer(config util.IMConfig) {
 
 /*
  监听方法
- */
+*/
 func (this *Server) listen() {
 	go func() {
 		for {
@@ -68,7 +68,7 @@ func (this *Server) listen() {
 
 /*
  新客户端请求处理方法
- */
+*/
 func (this *Server) joinHandler(conn net.Conn) {
 	//获取UUID作为客户端的key
 	key := uuid.New()
@@ -104,14 +104,14 @@ func (this *Server) joinHandler(conn net.Conn) {
 
 /*
  客户端退出处理方法
- */
+*/
 func (this *Server) quitHandler(client *common.Client) {
 	if client != nil {
 		// 判断要求改变的状态和当前该用户的状态是否一致
 		model.DeleteConnByKey(client.Key)
 		count, _ := model.CountConnByKey(client.Key)
 		// 如果没有这用户的连接，同时更新用户状态为离线
-		if (count == 0 && client.Login != nil) {
+		if count == 0 && client.Login != nil {
 			model.UpdateUserStatus(client.Login.UserId, "0")
 		}
 
@@ -125,7 +125,7 @@ func (this *Server) quitHandler(client *common.Client) {
 
 /*
  接收消息处理方法
- */
+*/
 func (this *Server) receivedHandler(request common.IMRequest) {
 	log.Println("开始读取数据")
 	log.Println("读取的数据为", request)
@@ -146,13 +146,13 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 		}
 		// 校验用户是否登录，把Login数据放在client当中
 		login, err := model.GetLoginByToken(token)
-		if (err != nil) {
+		if err != nil {
 			client.PutOut(common.NewIMResponseSimple(300, err.Error(), common.GET_CONN_RETURN))
 			return
 		}
-		client.Login = login;
+		client.Login = login
 		log.Printf("登录比较：token=%s Login=%s", token, client.Login)
-		if (!strings.EqualFold(client.Login.Token, token)) {
+		if !strings.EqualFold(client.Login.Token, token) {
 			client.PutOut(common.NewIMResponseSimple(302, "该用户令牌无效!", common.GET_CONN_RETURN))
 			return
 		}
@@ -209,7 +209,13 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 			return
 		}
 		client.PutOut(common.NewIMResponseData(util.SetData("categories", categories), common.GET_BUDDY_LIST_RETURN))
-
+		//初始化好友列表之后 检查该用户有没有未读的好友请求 并推送给用户
+		buddyRequests, err := model.GetBuddyRequestsByReceiver(client.Login.UserId)
+		if len(buddyRequests) > 0 {
+			for _, buddyRequest := range buddyRequests {
+				client.PutOut(common.NewIMResponseData(util.SetData("buddyRequest", buddyRequest), common.PUSH_BUDDY_REQUEST))
+			}
+		}
 	case common.CREATE_SESSION:
 		// 创建会话  //{"command":"CREATE_SESSION","data":{"session":{"sender":"xxx","receiver":"xxx","token":"xxxx"}}}
 		sender := reqData["session"]["sender"]
@@ -256,7 +262,7 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 		}
 		if conversion.Id != "" {
 			isSent := false
-			keys, err := model.GetReceiverKeyByTicket(reqData["message"]["ticket"])
+			keys, err := model.GetReceiverKeyByTicket(ticket)
 			if err != nil {
 				client.PutOut(common.NewIMResponseSimple(300, err.Error(), common.SEND_MSG_RETURN))
 				return
@@ -275,7 +281,7 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 				this.clients[key].PutOut(common.NewIMResponseData(util.SetData("message", data), common.PUSH_MSG))
 				isSent = true
 			}
-			if (!isSent) {
+			if !isSent {
 				client.PutOut(common.NewIMResponseSimple(304, "对方不在线!", common.GET_CONN_RETURN))
 				return
 			}
@@ -327,8 +333,25 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 			return
 		}
 	case common.LOGOUT_REQUEST:
-		// 退出//{"command":"LOGOUT_REQUEST","data":null}}
 		client.Quiting()
+	case common.SEND_BUDDY_REQUEST:
+		receiver := reqData["buddyRequest"]["receiver"]
+		//判断接收者是不是在线
+		user, _ := model.GetUserById(receiver)
+		if user == nil || user.Status == "0" { //不在线 记录到好友请求表中
+			id, _ := model.AddBuddyRequest(reqData["buddyRequest"]["sender"], reqData["buddyRequest"]["senderCateId"], receiver)
+			if id != nil {
+
+			}
+		} else { //在线直接推送给接收者
+			conn, _ := model.GetConnByUserId(receiver)
+			data := make(map[string]string)
+			data["sender"] = reqData["buddyRequest"]["sender"]
+			data["senderCateId"] = reqData["buddyRequest"]["senderCateId"]
+			data["receiver"] = reqData["buddyRequest"]["receiver"]
+			this.clients[conn.Key].PutOut(common.NewIMResponseData(util.SetData("buddyRequest", data), common.PUSH_BUDDY_REQUEST))
+		}
+
 	}
 }
 

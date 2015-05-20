@@ -2,7 +2,7 @@ package common
 
 /*
  全局常量
- */
+*/
 const (
 	GET_KEY_RETURN        = "GET_KEY_RETURN"        // 请求TCP获取连接KEY
 	GET_CONN              = "GET_CONN"              // 建立TCP长连接
@@ -18,7 +18,8 @@ const (
 	PUSH_STATUS_CHANGE    = "PUSH_STATUS_CHANGE"    // 接收状态
 	LOGOUT_REQUEST        = "LOGOUT_REQUEST"        // 退出
 	UNAUTHORIZED          = "UNAUTHORIZED"          // 未授权
-
+	SEND_BUDDY_REQUEST    = "SEND_BUDDY_REQUEST"    // 发送好友请求
+	PUSH_BUDDY_REQUEST    = "PUSH_BUDDY_REQUEST"    // 接收好友请求
 	FORMAT_DATE           = "2006-01-02"
 	FORMAT_DATETIME       = "2006-01-02 15:04:05"
 	FORMAT_DATETIME_ZONE  = "2006-01-02T15:04:05+08:00"

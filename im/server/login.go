@@ -42,7 +42,6 @@ func handleRegister(resp http.ResponseWriter, req *http.Request) {
 		password := req.FormValue("password")
 		nick := req.FormValue("nick")
 		avatar := req.FormValue("avatar")
-
 		register(resp, account, password, nick, avatar)
 	} else {
 		resp.Write(common.NewIMResponseSimple(404, "Not Found: "+req.Method, "").Encode())
