@@ -200,12 +200,13 @@ func GetBuddiesKeyById(id string) ([]string, error) {
 */
 func QueryUser(clumn string, reg string, data string) ([]User, error) {
 	var users []User
-	sql := "select u.id, u.nick, u.status, u.sign, u.avatar, u.create_at, u.update_at from im_user u where %s %s"
-	fmt.Sprintf(sql, clumn, reg)
+	sql := "select u.id, u.nick, u.status, u.sign, u.avatar, u.create_at, u.update_at from im_user u where %s %s %s "
+
 	if reg == "like" {
-		data = "%" + data + "%"
+		data = "'%" + data + "%'"
 	}
-	rows, err := Database.Query(sql, data)
+	sql = fmt.Sprintf(sql, clumn, reg, data)
+	rows, err := Database.Query(sql)
 	if err != nil {
 		return users, &DatabaseError{"根据" + clumn + "查询用户错误"}
 	}
@@ -214,6 +215,5 @@ func QueryUser(clumn string, reg string, data string) ([]User, error) {
 		rows.Scan(&user.Id, &user.Nick, &user.Status, &user.Sign, &user.Avatar, &user.CreateAt, &user.UpdateAt)
 		users = append(users, user)
 	}
-
 	return users, nil
 }

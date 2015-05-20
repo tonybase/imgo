@@ -67,15 +67,11 @@ func handleLogin(resp http.ResponseWriter, req *http.Request) {
 查询请求处理方法
 */
 func handleQuery(resp http.ResponseWriter, req *http.Request) {
-	// GET登录请求
-	if req.Method == "GET" {
-		nick := req.FormValue("nick")
-		users, err := model.QueryUser("nick", "like", nick)
-		if err != nil {
-			resp.Write(common.NewIMResponseData(util.SetData("users", users), "").Encode())
-		}
-	} else {
-		resp.Write(common.NewIMResponseSimple(404, "Not Found: "+req.Method, "").Encode())
+	fmt.Println("=====进来了====")
+	nick := req.FormValue("nick")
+	users, err := model.QueryUser("nick", "like", nick)
+	if err == nil {
+		resp.Write(common.NewIMResponseData(util.SetData("users", users), "").Encode())
 	}
 }
 
