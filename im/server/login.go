@@ -67,7 +67,6 @@ func handleLogin(resp http.ResponseWriter, req *http.Request) {
 查询请求处理方法
 */
 func handleQuery(resp http.ResponseWriter, req *http.Request) {
-	fmt.Println("=====进来了====")
 	nick := req.FormValue("nick")
 	users, err := model.QueryUser("nick", "like", nick)
 	if err == nil {

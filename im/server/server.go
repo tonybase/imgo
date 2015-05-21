@@ -223,8 +223,6 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 	switch request.Command {
 	case common.GET_BUDDY_LIST:
 		// 获取好友分组列表
-		log.Println("获取好友列表：userId=%s", client.Login.UserId)
-		//return
 		categories, err := model.GetCategoriesByUserId(client.Login.UserId)
 		if err != nil {
 			client.PutOut(common.NewIMResponseSimple(301, "获取好友分类错误!", common.GET_BUDDY_LIST_RETURN))
