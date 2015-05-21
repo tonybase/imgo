@@ -115,6 +115,20 @@ func (this *Server) quitHandler(client *common.Client) {
 			model.UpdateUserStatus(client.Login.UserId, "0")
 		}
 
+		// 通知在线的好友，我离线了
+		keys, err := model.GetBuddiesKeyById(client.Login.UserId)
+		if err != nil {
+			client.PutOut(common.NewIMResponseSimple(300, err.Error(), common.SEND_STATUS_CHANGE))
+			return
+		}
+		for i := 0; i < len(keys); i++ {
+			//给对应的连接推送好友状态变化的通知
+			data := make(map[string]string)
+			data["id"] = client.Login.UserId
+			data["state"] = "0"
+			this.clients[keys[i]].PutOut(common.NewIMResponseData(util.SetData("user", data), common.PUSH_STATUS_CHANGE))
+		}
+
 		// 调用客户端关闭方法
 		client.Close()
 		delete(this.clients, client.Key)
@@ -181,6 +195,19 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 			data := make(map[string]interface{})
 			data["status"] = 1
 			client.PutOut(common.NewIMResponseData(util.SetData("conn", data), common.GET_CONN_RETURN))
+			// 通知在线的好友，我上线了
+			keys, err := model.GetBuddiesKeyById(client.Login.UserId)
+			if err != nil {
+				client.PutOut(common.NewIMResponseSimple(300, err.Error(), common.SEND_STATUS_CHANGE))
+				return
+			}
+			for i := 0; i < len(keys); i++ {
+				//给对应的连接推送好友状态变化的通知
+				data := make(map[string]string)
+				data["id"] = client.Login.UserId
+				data["state"] = "1"
+				this.clients[keys[i]].PutOut(common.NewIMResponseData(util.SetData("user", data), common.PUSH_STATUS_CHANGE))
+			}
 			return
 		} else {
 			client.PutOut(common.NewIMResponseSimple(303, "用户未登录!", common.GET_CONN_RETURN))
