@@ -1,8 +1,8 @@
 package model
 
 import (
-	"encoding/json"
 	"code.google.com/p/go-uuid/uuid"
+	"encoding/json"
 	"time"
 )
 
@@ -27,7 +27,7 @@ func (this *Category) Encode() []byte {
 
 /*
  解析JSON数据
- */
+*/
 func (this *Category) Decode(data []byte) error {
 	err := json.Unmarshal(data, this)
 	return err
@@ -35,18 +35,18 @@ func (this *Category) Decode(data []byte) error {
 
 /*
  分组PUSH用户(仅传递数据 非操作数据库方法)
- */
+*/
 func (this *Category) AddUser(u User) {
 	this.Buddies = append(this.Buddies, u)
 }
 
 /*
  根据token获取分组数据
- */
+*/
 func GetCategoriesByToken(token string) ([]Category, error) {
 	var categories []Category
 	rows, err := Database.Query("select g.id, g.name from im_category g left join im_login l on l.user_id=g.creator where token=?", token)
-	if (err != nil) {
+	if err != nil {
 		return nil, &DatabaseError{"根据Token获取好友分类错误"}
 	}
 	defer rows.Close()
@@ -57,10 +57,11 @@ func GetCategoriesByToken(token string) ([]Category, error) {
 	}
 	return categories, nil
 }
+
 /*
 根据ID删除好友分类
 */
-func DelCategoryById(categoryId string)(int64, error){
+func DelCategoryById(categoryId string) (int64, error) {
 	delStmt, err := Database.Prepare("delete from im_category where id=? ")
 	if err != nil {
 		return -1, &DatabaseError{"删除好友分类数据库处理错误"}
@@ -76,10 +77,11 @@ func DelCategoryById(categoryId string)(int64, error){
 	}
 	return num, nil
 }
+
 /*
 根据ID修改好友分类名称
 */
-func EditCategoryById(categoryId string,categoryName string)(int64, error){
+func EditCategoryById(categoryId string, categoryName string) (int64, error) {
 	var num int64
 	updateStmt, err := Database.Prepare("UPDATE im_category SET `name` = ? WHERE id =?")
 	if err != nil {
@@ -96,13 +98,14 @@ func EditCategoryById(categoryId string,categoryName string)(int64, error){
 	}
 	return num, nil
 }
+
 /*
  根据UserId获取分组数据
- */
-func GetCategoriesByUserId(token string) ([]Category, error) {
+*/
+func GetCategoriesByUserId(id string) ([]Category, error) {
 	var categories []Category
-	rows, err := Database.Query("select * from im_category where creator=?", token)
-	if (err != nil) {
+	rows, err := Database.Query("select * from im_category where creator=?", id)
+	if err != nil {
 		return nil, &DatabaseError{"根据用户ID获取好友分类错误"}
 	}
 	defer rows.Close()
@@ -116,7 +119,7 @@ func GetCategoriesByUserId(token string) ([]Category, error) {
 
 /*
  添加好友分类
- */
+*/
 func AddCategory(userId string, name string) (*string, error) {
 	insStmt, err := Database.Prepare("insert into im_category (id, name, creator, create_at) VALUES (?, ?, ?, ?)")
 	if err != nil {
@@ -128,5 +131,5 @@ func AddCategory(userId string, name string) (*string, error) {
 	if err != nil {
 		return nil, &DatabaseError{"保存好友分类记录错误"}
 	}
-	return &id, nil;
+	return &id, nil
 }

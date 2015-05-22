@@ -24,6 +24,7 @@ func StartHttpServer(config util.IMConfig) error {
 	http.HandleFunc("/users/category/add", handleUserCategoryAdd)
 	http.HandleFunc("/users/category/del", handleUserCategoryDel)
 	http.HandleFunc("/users/category/edit", handleUserCategoryEdit)
+	http.HandleFunc("/users/category/query", handleUserCategoryQuery)
 	//打印监听端口
 	log.Printf("Http服务器开始监听[%d]端口", config.HttpPort)
 	log.Println("*********************************************")
@@ -196,6 +197,13 @@ func handleUserCategoryEdit(resp http.ResponseWriter, req *http.Request) {
 	default:
 		resp.Write(common.NewIMResponseSimple(404, "Not Found: "+req.Method, "").Encode())
 
+	}
+}
+func handleUserCategoryQuery(resp http.ResponseWriter, req *http.Request) {
+	id := req.FormValue("id")
+	categories, err := model.GetCategoriesByUserId(id)
+	if err == nil {
+		resp.Write(common.NewIMResponseData(util.SetData("categories", categories), "").Encode())
 	}
 }
 
