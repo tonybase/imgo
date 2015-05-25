@@ -21,6 +21,7 @@ func StartHttpServer(config util.IMConfig) error {
 	http.HandleFunc("/query", handleQuery)
 	http.HandleFunc("/users/relation/add", handleUserRelationAdd)
 	http.HandleFunc("/users/relation/del", handleUserRelationDel)
+	http.HandleFunc("/users/relation/push", handleUserRelationPush)
 	http.HandleFunc("/users/category/add", handleUserCategoryAdd)
 	http.HandleFunc("/users/category/del", handleUserCategoryDel)
 	http.HandleFunc("/users/category/edit", handleUserCategoryEdit)
@@ -252,6 +253,33 @@ func handleUserRelationDel(resp http.ResponseWriter, req *http.Request) {
 				resp.Write(common.NewIMResponseSimple(0, "已删除好友关系", "").Encode())
 			} else {
 				resp.Write(common.NewIMResponseSimple(103, "删除好友关系失败", "").Encode())
+			}
+		}
+	} else {
+		resp.Write(common.NewIMResponseSimple(404, "Not Found: "+req.Method, "").Encode())
+	}
+}
+func handleUserRelationPush(resp http.ResponseWriter, req *http.Request) {
+	if req.Method == "POST" {
+		sender_category_id := req.FormValue("sender_category_id")
+		sender := req.FormValue("sender")
+		receiver := req.FormValue("receiver")
+		if sender_category_id == "" {
+			resp.Write(common.NewIMResponseSimple(101, "请选择分组", "").Encode())
+		} else if sender == "" {
+			resp.Write(common.NewIMResponseSimple(102, "请重新登录", "").Encode())
+		} else {
+			//判断接收人是不是在线 在线直接推送，不在线记录至请求表中
+			conn, _ := model.GetConnByUserId(receiver)
+			user, _ := model.GetUserById(sender)
+			if conn != nil { //在线
+				ClientMaps[conn.Key].PutOut(common.NewIMResponseData(util.SetData("user", user), common.PUSH_BUDDY_REQUEST))
+			} else { //不在线
+				_, err := model.AddBuddyRequest(sender, sender_category_id, receiver)
+				if err != nil {
+					resp.Write(common.NewIMResponseSimple(100, "发送好友请求异常", "").Encode())
+					return
+				}
 			}
 		}
 	} else {

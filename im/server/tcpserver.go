@@ -25,6 +25,8 @@ type Server struct {
 	insniffer   common.InMessage    // 接收消息嗅探器 触发接收消息处理方法 对应客户端中in属性
 }
 
+var ClientMaps common.ClientTable
+
 /*
  IM服务启动方法
 */
@@ -37,6 +39,7 @@ func StartIMServer(config util.IMConfig) {
 		quitsniffer: make(chan *common.Client),
 		insniffer:   make(common.InMessage),
 	}
+	ClientMaps = server.clients
 	// 添加关闭勾子，当关闭服务器时执行
 	server.interruptHandler()
 	// 启动监听方法(包含各类嗅探器)

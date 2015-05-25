@@ -6,19 +6,19 @@ import (
 )
 
 type BuddyRequest struct {
-	Id           string    `json:"id"`           // ID
-	Sender       string    `json:"sender"`       // 请求者
-	SenderCateId string    `json:"senderCateId"` // 请求者分组ID
-	Receiver     string    `json:"receiver"`     // 接收者
-	SendAt       time.Time `json:"sendAt"`       // 请求时间
-	Status       string    `json:"status"`       // 状态
+	Id               string    `json:"id"`               // ID
+	Sender           string    `json:"sender"`           // 请求者
+	SenderCategoryId string    `json:"senderCategoryId"` // 请求者分组ID
+	Receiver         string    `json:"receiver"`         // 接收者
+	SendAt           time.Time `json:"sendAt"`           // 请求时间
+	Status           string    `json:"status"`           // 状态
 }
 
 /*
 添加好友请求数据(好友未在线所以存好友请求表)
 */
 func AddBuddyRequest(sender string, sender_cate_id string, receiver string) (*string, error) {
-	insStmt, err := Database.Prepare("insert into im_buddy_request (id, sender, sender_cate_id, receiver,send_at) VALUES (?, ?, ?, ?,?)")
+	insStmt, err := Database.Prepare("insert into im_buddy_request (id, sender, sender_category_id, receiver,send_at) VALUES (?, ?, ?, ?,?)")
 	if err != nil {
 		return nil, &DatabaseError{"保存好友请求错误"}
 	}
@@ -43,7 +43,7 @@ func GetBuddyRequestsByReceiver(receiver string) ([]BuddyRequest, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var buddyRequest BuddyRequest
-		rows.Scan(&buddyRequest.Id, &buddyRequest.Sender, &buddyRequest.SenderCateId, &buddyRequest.Receiver, &buddyRequest.SendAt, &buddyRequest.Status)
+		rows.Scan(&buddyRequest.Id, &buddyRequest.Sender, &buddyRequest.SenderCategoryId, &buddyRequest.Receiver, &buddyRequest.SendAt, &buddyRequest.Status)
 		buddyRequests = append(buddyRequests, buddyRequest)
 	}
 	return buddyRequests, nil
