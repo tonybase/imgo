@@ -272,14 +272,22 @@ func handleUserRelationPush(resp http.ResponseWriter, req *http.Request) {
 			//判断接收人是不是在线 在线直接推送，不在线记录至请求表中
 			conn, _ := model.GetConnByUserId(receiver)
 			user, _ := model.GetUserById(sender)
-			if conn != nil { //在线
-				ClientMaps[conn.Key].PutOut(common.NewIMResponseData(util.SetData("user", user), common.PUSH_BUDDY_REQUEST))
-			} else { //不在线
-				_, err := model.AddBuddyRequest(sender, sender_category_id, receiver)
-				if err != nil {
-					resp.Write(common.NewIMResponseSimple(100, "发送好友请求异常", "").Encode())
-					return
+			buddyRequestId, err := model.AddBuddyRequest(sender, sender_category_id, receiver)
+			if err != nil {
+				if conn != nil { //在线 直接推送 不在线 客户登录时候会激活请求通知
+					data := make(map[string]interface{})
+					data["id"] = user.Id
+					data["nick"] = user.Nick
+					data["status"] = user.Status
+					data["sign"] = user.Sign
+					data["avatar"] = user.Avatar
+					data["buddyRequestId"] = buddyRequestId
+					ClientMaps[conn.Key].PutOut(common.NewIMResponseData(util.SetData("user", data), common.PUSH_BUDDY_REQUEST))
+					resp.Write(common.NewIMResponseSimple(0, "发送好友请求成功", "").Encode())
 				}
+			} else {
+				resp.Write(common.NewIMResponseSimple(100, "发送好友请求异常", "").Encode())
+				return
 			}
 		}
 	} else {

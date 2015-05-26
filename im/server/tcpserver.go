@@ -241,7 +241,15 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 		buddyRequests, err := model.GetBuddyRequestsByReceiver(client.Login.UserId)
 		if len(buddyRequests) > 0 {
 			for _, buddyRequest := range buddyRequests {
-				client.PutOut(common.NewIMResponseData(util.SetData("buddyRequest", buddyRequest), common.PUSH_BUDDY_REQUEST))
+				user, _ := model.GetUserById(buddyRequest.Sender)
+				data := make(map[string]interface{})
+				data["id"] = user.Id
+				data["nick"] = user.Nick
+				data["status"] = user.Status
+				data["sign"] = user.Sign
+				data["avatar"] = user.Avatar
+				data["buddyRequestId"] = buddyRequest.Id
+				client.PutOut(common.NewIMResponseData(util.SetData("user", data), common.PUSH_BUDDY_REQUEST))
 			}
 		}
 	case common.CREATE_SESSION:
