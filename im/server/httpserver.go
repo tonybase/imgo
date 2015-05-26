@@ -203,7 +203,9 @@ func handleUserCategoryEdit(resp http.ResponseWriter, req *http.Request) {
 func handleUserCategoryQuery(resp http.ResponseWriter, req *http.Request) {
 	id := req.FormValue("id")
 	categories, err := model.GetCategoriesByUserId(id)
-	if err == nil {
+	if err != nil {
+		resp.Write(common.NewIMResponseSimple(100, err.Error(), "").Encode())
+	} else {
 		resp.Write(common.NewIMResponseData(util.SetData("categories", categories), "").Encode())
 	}
 }
@@ -274,6 +276,8 @@ func handleUserRelationPush(resp http.ResponseWriter, req *http.Request) {
 			user, _ := model.GetUserById(sender)
 			buddyRequestId, err := model.AddBuddyRequest(sender, sender_category_id, receiver)
 			if err != nil {
+				resp.Write(common.NewIMResponseSimple(100, err.Error(), "").Encode())
+			} else {
 				if conn != nil { //在线 直接推送 不在线 客户登录时候会激活请求通知
 					data := make(map[string]interface{})
 					data["id"] = user.Id
@@ -285,8 +289,7 @@ func handleUserRelationPush(resp http.ResponseWriter, req *http.Request) {
 					ClientMaps[conn.Key].PutOut(common.NewIMResponseData(util.SetData("user", data), common.PUSH_BUDDY_REQUEST))
 					resp.Write(common.NewIMResponseSimple(0, "发送好友请求成功", "").Encode())
 				}
-			} else {
-				resp.Write(common.NewIMResponseSimple(100, "发送好友请求异常", "").Encode())
+				resp.Write(common.NewIMResponseSimple(1, "发送好友请求成功", "").Encode())
 				return
 			}
 		}

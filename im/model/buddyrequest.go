@@ -3,6 +3,7 @@ package model
 import (
 	"code.google.com/p/go-uuid/uuid"
 	"time"
+	"log"
 )
 
 type BuddyRequest struct {
@@ -15,17 +16,19 @@ type BuddyRequest struct {
 }
 
 /*
-添加好友请求数据(好友未在线所以存好友请求表)
+ 添加好友请求数据(好友未在线所以存好友请求表)
 */
 func AddBuddyRequest(sender string, sender_cate_id string, receiver string) (*string, error) {
 	insStmt, err := Database.Prepare("insert into im_buddy_request (id,sender,sender_category_id,receiver,send_at,status) VALUES (?,?,?,?,?,?)")
 	if err != nil {
+		log.Println(err)
 		return nil, &DatabaseError{"保存好友请求错误"}
 	}
 	defer insStmt.Close()
 	id := uuid.New()
 	_, err = insStmt.Exec(id, sender, sender_cate_id, receiver, time.Now().Format("2006-01-02 15:04:05"), "0")
 	if err != nil {
+		log.Println(err)
 		return nil, &DatabaseError{"保存好友请求错误"}
 	}
 	return &id, nil
