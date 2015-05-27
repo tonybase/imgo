@@ -238,7 +238,12 @@ func handleUserRelationAdd(resp http.ResponseWriter, req *http.Request) {
 				return
 			} else {
 				tx.Commit()
-				resp.Write(common.NewIMResponseSimple(0, "好友关系建立成功", "").Encode())
+				user, _ := model.GetUserById(sender)
+				data := make(map[string]interface{})
+				data["category_id"] = receiver_category_id
+				data["user"] = user
+				resp.Write(common.NewIMResponseData(data, "").Encode())
+//				resp.Write(common.NewIMResponseSimple(0, "好友关系建立成功", "").Encode())
 				return
 			}
 
