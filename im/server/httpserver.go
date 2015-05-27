@@ -22,6 +22,7 @@ func StartHttpServer(config util.IMConfig) error {
 	http.HandleFunc("/users/relation/add", handleUserRelationAdd)
 	http.HandleFunc("/users/relation/del", handleUserRelationDel)
 	http.HandleFunc("/users/relation/push", handleUserRelationPush)
+	http.HandleFunc("/users/relation/refuse", handleUserRelationRefuse)
 	http.HandleFunc("/users/category/add", handleUserCategoryAdd)
 	http.HandleFunc("/users/category/del", handleUserCategoryDel)
 	http.HandleFunc("/users/category/edit", handleUserCategoryEdit)
@@ -213,24 +214,38 @@ func handleUserCategoryQuery(resp http.ResponseWriter, req *http.Request) {
 // 添加好友关系
 func handleUserRelationAdd(resp http.ResponseWriter, req *http.Request) {
 	if req.Method == "POST" {
-		userId := req.FormValue("user_id")
-		categoryId := req.FormValue("category_id")
-		if userId == "" {
-			resp.Write(common.NewIMResponseSimple(101, "用户ID不能为空", "").Encode())
-		} else if categoryId == "" {
-			resp.Write(common.NewIMResponseSimple(102, "类别ID不能为空", "").Encode())
-		} else {
-			num, err := model.AddFriendRelation(userId, categoryId)
+		receiver_category_id := req.FormValue("receiver_category_id")
+		buddy_request_id := req.FormValue("buddy_request_id")
+		buddyrequest, _ := model.GetBuddyRequestById(buddy_request_id)
+		if buddyrequest != nil {
+			receiver := buddyrequest.Receiver
+			sender := buddyrequest.Sender
+			sender_category_id := buddyrequest.SenderCategoryId
+			//开启事务
+			tx, _ := model.Database.Begin()
+			//修改好友请求记录中接受人的好友分组ID
+			_, err := model.UpdateBuddyRequestReceiverCategoryId(tx, buddy_request_id, receiver_category_id)
+			//添加请求人好友关系数据
+			_, err = model.AddFriendRelation(tx, receiver, sender_category_id)
+			//添加接收人好友关系数据
+			_, err = model.AddFriendRelation(tx, sender, receiver_category_id)
+			//修改好友请求记录中状态
+			_, err = model.UpdateBuddyRequestStatus(tx, buddy_request_id, "1")
+
 			if err != nil {
+				tx.Rollback()
 				resp.Write(common.NewIMResponseSimple(100, err.Error(), "").Encode())
 				return
-			}
-			if num > 0 {
-				resp.Write(common.NewIMResponseSimple(0, "已建立好友关系", "").Encode())
 			} else {
-				resp.Write(common.NewIMResponseSimple(103, "建立好友关系失败", "").Encode())
+				tx.Commit()
+				resp.Write(common.NewIMResponseSimple(0, "好友关系建立成功", "").Encode())
+				return
 			}
+
+		} else {
+			resp.Write(common.NewIMResponseSimple(104, "该好友请求不存在", "").Encode())
 		}
+
 	} else {
 		resp.Write(common.NewIMResponseSimple(404, "Not Found: "+req.Method, "").Encode())
 	}
@@ -293,6 +308,31 @@ func handleUserRelationPush(resp http.ResponseWriter, req *http.Request) {
 				return
 			}
 		}
+	} else {
+		resp.Write(common.NewIMResponseSimple(404, "Not Found: "+req.Method, "").Encode())
+	}
+}
+
+func handleUserRelationRefuse(resp http.ResponseWriter, req *http.Request) {
+	if req.Method == "POST" {
+		buddy_request_id := req.FormValue("buddy_request_id")
+		if buddy_request_id != "" {
+			tx, _ := model.Database.Begin()
+			//修改好友请求记录中状态
+			_, err := model.UpdateBuddyRequestStatus(tx, buddy_request_id, "2")
+			if err != nil {
+				tx.Rollback()
+				resp.Write(common.NewIMResponseSimple(100, err.Error(), "").Encode())
+				return
+			} else {
+				tx.Commit()
+				resp.Write(common.NewIMResponseSimple(0, "已经拒绝该好友请求成功", "").Encode())
+				return
+			}
+		} else {
+			resp.Write(common.NewIMResponseSimple(109, "该好友请求不合法", "").Encode())
+		}
+
 	} else {
 		resp.Write(common.NewIMResponseSimple(404, "Not Found: "+req.Method, "").Encode())
 	}

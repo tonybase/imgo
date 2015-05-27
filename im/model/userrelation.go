@@ -1,19 +1,21 @@
 package model
+
 import (
+	"database/sql"
 	"time"
 )
 
 type UserRelation struct {
-	UserId string        `json:"user_id"`
+	UserId     string    `json:"user_id"`
 	CategoryId string    `json:"category_id"`
-	CreateAt time.Time   `json:"create_at"`
+	CreateAt   time.Time `json:"create_at"`
 }
 
 /**
- 添加好友关系数据库
- */
-func AddFriendRelation(userId string, categoryId string) (int64, error) {
-	insStmt, err := Database.Prepare("insert into im_relation_user_category (user_id, category_id, create_at) VALUES (?, ?, ?)")
+添加好友关系数据库
+*/
+func AddFriendRelation(tx *sql.Tx, userId string, categoryId string) (int64, error) {
+	insStmt, err := tx.Prepare("insert into im_relation_user_category (user_id, category_id, create_at) VALUES (?, ?, ?)")
 	if err != nil {
 		return -1, &DatabaseError{"添加好友关系数据库处理错误"}
 	}
@@ -28,9 +30,10 @@ func AddFriendRelation(userId string, categoryId string) (int64, error) {
 	}
 	return num, nil
 }
+
 /**
- 删除好友关系数据库
- */
+删除好友关系数据库
+*/
 func DelFriendRelation(userId string, categoryId string) (int64, error) {
 	delStmt, err := Database.Prepare("delete from im_relation_user_category where user_id=? and category_id=? ")
 	if err != nil {
