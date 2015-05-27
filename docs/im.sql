@@ -24,7 +24,7 @@ DROP TABLE IF EXISTS `im_buddy_request`;
 CREATE TABLE `im_buddy_request` (
   `id` varchar(255) NOT NULL COMMENT 'ID',
   `sender` varchar(255) NOT NULL COMMENT '发送者',
-  `sender_cate_id` varchar(255) NOT NULL COMMENT '发送者好友分类ID',
+  `sender_category_id` varchar(255) NOT NULL COMMENT '发送者好友分类ID',
   `receiver` varchar(255) NOT NULL COMMENT '接收者',
   `send_at` datetime NOT NULL COMMENT '发送请求日期',
   `status` char(1) NOT NULL DEFAULT '0' COMMENT '状态 0未读、1同意、2拒绝',
