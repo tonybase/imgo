@@ -129,7 +129,9 @@ func (this *Server) quitHandler(client *common.Client) {
 			data := make(map[string]string)
 			data["id"] = client.Login.UserId
 			data["state"] = "0"
-			this.clients[keys[i]].PutOut(common.NewIMResponseData(util.SetData("user", data), common.PUSH_STATUS_CHANGE))
+			if (this.clients[keys[i]] != nil) {
+				this.clients[keys[i]].PutOut(common.NewIMResponseData(util.SetData("user", data), common.PUSH_STATUS_CHANGE))
+			}
 		}
 
 		// 调用客户端关闭方法
@@ -209,7 +211,9 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 				data := make(map[string]string)
 				data["id"] = client.Login.UserId
 				data["state"] = "1"
-				this.clients[keys[i]].PutOut(common.NewIMResponseData(util.SetData("user", data), common.PUSH_STATUS_CHANGE))
+				if (this.clients[keys[i]] != nil) {
+					this.clients[keys[i]].PutOut(common.NewIMResponseData(util.SetData("user", data), common.PUSH_STATUS_CHANGE))
+				}
 			}
 			return
 		} else {
