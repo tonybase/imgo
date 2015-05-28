@@ -1,42 +1,68 @@
 package main
 
 import (
-	"bufio"
-	"im-go/im"
-	"im-go/im/common"
-	"log"
+	"fmt"
 	"net"
-	"os"
+	"encoding/json"
+
 )
 
+const (
+	tcpaddr = "127.0.0.1:9090"
+)
+type IMResponse struct {
+	Status int         `json:"status"` //状态 0成功，非0错误
+	Msg    string      `json:"msg"`    //消息
+	Data   map[string]map[string]interface{} `json:"data"`   //数据
+	Refer  string      `json:"refer"`  //来源
+}
 func main() {
 
-	conn, err := net.Dial("tcp", "127.0.0.1:9090")
+	Client()
+	/**for i:=0;i<3 ;i++  {
+		 Client()
+	}**/
 
-	if err != nil {
-		log.Fatal(err)
-	}
+}
 
+func Client() {
+	conn, err := net.Dial("tcp", tcpaddr)
 	defer conn.Close()
-	in := bufio.NewReader(os.Stdin)
-	out := bufio.NewWriter(os.Stdout)
-
-	client := common.CreateClient("test", conn)
-
-	go func() {
-		for {
-			msg := client.GetIn()
-			out.Write(msg.Encode())
-			out.WriteString("\n")
-			out.Flush()
-		}
-	}()
-
+	if err != nil {
+		fmt.Println("连接服务端失败:", err.Error())
+		return
+	}
+	fmt.Println("已连接服务器")
+	sms := make([]byte, 1024)
+	sms=[]byte("")
 	for {
-		line, _, _ := in.ReadLine()
-		msg := new(common.IMResponse)
-		msg.Data = string(line)
-		client.PutOut(msg)
+
+		fmt.Println(string(sms))
+		conn.Write(sms)
+		buf := make([]byte, 1024)
+		c, err := conn.Read(buf)
+		if err != nil {
+			fmt.Println("读取服务器数据异常:", err.Error())
+		}
+		msg:=string(buf[0:c])
+		fmt.Println(msg)
+		if msg!=""{
+			var res IMResponse
+			json.Unmarshal(buf[0:c],&res)
+			fmt.Println(res.Refer)
+			fmt.Println(res.Data["conn"]["key"])
+			switch res.Refer{
+				case "GET_KEY_RETURN":
+				sms=[]byte("{\"command\":\"GET_CONN\",\"data\":{\"user\":{\"id\":\"11\",\"token\":\"3233\",\"key\":\""+res.Data["conn"]["key"].(string)+"\"}}}")
+				conn.Write(sms)
+				case "GET_CONN_RETURN":
+
+				case "CREATE_SESSION_RETURN":
+
+			}
+
+		}
+
 	}
 
 }
