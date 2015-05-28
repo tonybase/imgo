@@ -238,11 +238,25 @@ func handleUserRelationAdd(resp http.ResponseWriter, req *http.Request) {
 				return
 			} else {
 				tx.Commit()
-				user, _ := model.GetUserById(sender)
-				data := make(map[string]interface{})
-				data["user"] = user
-				resp.Write(common.NewIMResponseData(data, "").Encode())
-//				resp.Write(common.NewIMResponseSimple(0, "好友关系建立成功", "").Encode())
+				//判断请求者是不是在线 在线就把接受者推送给请求者
+				conn, _ := model.GetConnByUserId(sender)
+				if conn != nil { //在线
+					user, _ := model.GetUserById(receiver)
+					data := make(map[string]interface{})
+					data["category_id"] = sender_category_id
+					data["user"] = user
+					ClientMaps[conn.Key].PutOut(common.NewIMResponseData(util.SetData("user", data), common.ADD_BUDDY))
+					resp.Write(common.NewIMResponseSimple(0, "好友关系建立成功", "").Encode())
+				}
+				conn, _ = model.GetConnByUserId(receiver)
+				if conn != nil {
+					user, _ := model.GetUserById(sender)
+					data := make(map[string]interface{})
+					data["category_id"] = receiver_category_id
+					data["user"] = user
+					ClientMaps[conn.Key].PutOut(common.NewIMResponseData(util.SetData("user", data), common.ADD_BUDDY))
+					resp.Write(common.NewIMResponseSimple(0, "好友关系建立成功", "").Encode())
+				}
 				return
 			}
 
