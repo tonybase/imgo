@@ -246,7 +246,6 @@ func handleUserRelationAdd(resp http.ResponseWriter, req *http.Request) {
 					data["category_id"] = sender_category_id
 					data["user"] = user
 					ClientMaps[conn.Key].PutOut(common.NewIMResponseData(util.SetData("user", data), common.ADD_BUDDY))
-					resp.Write(common.NewIMResponseSimple(0, "好友关系建立成功", "").Encode())
 				}
 				conn, _ = model.GetConnByUserId(receiver)
 				if conn != nil {
@@ -255,8 +254,8 @@ func handleUserRelationAdd(resp http.ResponseWriter, req *http.Request) {
 					data["category_id"] = receiver_category_id
 					data["user"] = user
 					ClientMaps[conn.Key].PutOut(common.NewIMResponseData(util.SetData("user", data), common.ADD_BUDDY))
-					resp.Write(common.NewIMResponseSimple(0, "好友关系建立成功", "").Encode())
 				}
+				resp.Write(common.NewIMResponseSimple(0, "好友关系建立成功", "").Encode())
 				return
 			}
 
