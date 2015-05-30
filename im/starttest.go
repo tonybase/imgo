@@ -19,7 +19,7 @@ type IMResponse struct {
 func main() {
 	var recv chan string = make(chan string)
 
-	for i := 0; i<150; i++ {
+	for i := 0; i<1000; i++ {
 		go testTcp()
 	}
 
@@ -35,7 +35,7 @@ func testConn() {
 	}
 }
 
-// 测试tcp转发
+// 测试tcp发送和接收
 func testTcp() {
 	conn, err := net.Dial("tcp", "127.0.0.1:9090")
 

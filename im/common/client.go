@@ -98,7 +98,7 @@ func (this *Client) read() {
 				log.Printf("解析JSON错误: %s", line)
 			}
 		} else {
-			log.Printf("Read error: %s\n", err)
+//			log.Printf("Read error: %s\n", err)
 			this.Quiting()
 			return
 		}

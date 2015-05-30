@@ -79,7 +79,7 @@ func (this *Server) joinHandler(conn net.Conn) {
 	client := common.CreateClient(key, conn)
 	//给客户端指定key
 	this.clients[key] = client
-	log.Printf("设置新请求客户端Key为:[%s]", client.Key)
+	log.Printf("新客户端Key:[%s] total:%d", client.Key, len(ClientMaps))
 	// 开启协程不断地接收消息
 	go func() {
 		for {
@@ -94,7 +94,7 @@ func (this *Server) joinHandler(conn net.Conn) {
 		for {
 			//客户端接收断开请求
 			conn := <-client.Quit
-			log.Printf("客户端:[%s]退出", client.Key)
+//			log.Printf("客户端:[%s]退出", client.Key)
 			//请求交给嗅探器 触发对应的处理方法
 			this.quitsniffer <- conn
 		}
@@ -148,14 +148,14 @@ func (this *Server) quitHandler(client *common.Client) {
  接收消息处理方法
 */
 func (this *Server) receivedHandler(request common.IMRequest) {
-	log.Println("开始读取数据")
-	log.Println("读取的数据为", request)
+//	log.Println("开始读取数据")
+//	log.Println("读取的数据为", request)
 
 	// 获取请求的客户端
 	client := request.Client
 	// 获取请求数据
 	reqData := request.Data
-	log.Printf("客户端:[%s]发送命令:[%s]消息内容:[%s]", client.Key, request.Command, request.Data)
+//	log.Printf("客户端:[%s]发送命令:[%s]消息内容:[%s]", client.Key, request.Command, request.Data)
 
 	// 未登录业务处理部分
 	switch request.Command {
@@ -172,7 +172,7 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 			return
 		}
 		client.Login = login
-		log.Printf("登录比较：token=%s Login=%s", token, client.Login)
+//		log.Printf("登录比较：token=%s Login=%s", token, client.Login)
 		if !strings.EqualFold(client.Login.Token, token) {
 			client.PutOut(common.NewIMResponseSimple(302, "该用户令牌无效!", common.GET_CONN_RETURN))
 			return
@@ -411,7 +411,7 @@ func (this *Server) start() {
 			log.Fatalln(err)
 			return
 		}
-		log.Printf("新连接地址为:[%s]", conn.RemoteAddr())
+//		log.Printf("新连接地址为:[%s]", conn.RemoteAddr())
 		this.joinsniffer <- conn
 	}
 }
