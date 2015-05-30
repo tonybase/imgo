@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"encoding/json"
+	"time"
 )
 
 type IMResponse struct {
@@ -16,7 +17,26 @@ type IMResponse struct {
 }
 
 func main() {
+	var recv chan string = make(chan string)
 
+	for i := 0; i<150; i++ {
+		go testTcp()
+	}
+
+	<- recv
+}
+
+// 测试长连接数量
+func testConn() {
+	_, err := net.Dial("tcp", "127.0.0.1:9090")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+// 测试tcp转发
+func testTcp() {
 	conn, err := net.Dial("tcp", "127.0.0.1:9090")
 
 	if err != nil {
@@ -41,10 +61,54 @@ func main() {
 		}
 	}()
 
-	//	token := "11"
-	sender := "11"
-	receiver := "22"
-	token := sender
+	var res IMResponse
+	for {
+		// 收到消息，然后再回复
+		line := <-recv
+		if line != "" {
+			json.Unmarshal([]byte(line), &res)
+			switch res.Refer {
+			case "TCP_TEST":
+				// 发送消息
+				line = "{\"command\":\"TEST_TCP\",\"data\":\"Hello.\"}"
+
+				time.Sleep(10 * time.Second)
+			}
+		}
+		writer.WriteString(string(line) + "\n")
+		err := writer.Flush()
+		if (err != nil) {
+			os.Exit(0)
+		}
+	}
+}
+
+// 测试转发，以及数据库能力
+func test(sender string, token string, receiver string) {
+	conn, err := net.Dial("tcp", "127.0.0.1:9090")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+	reader := bufio.NewReader(conn)
+	writer := bufio.NewWriter(conn)
+
+	var recv chan string = make(chan string)
+
+	go func() {
+		for {
+			if line, _, err := reader.ReadLine(); err == nil {
+				var str string
+				str = string(line)
+				log.Println(str)
+				recv <- str
+			} else {
+				os.Exit(0)
+			}
+		}
+	}()
+
 	var res IMResponse
 	var ticket string
 	for {
@@ -69,6 +133,7 @@ func main() {
 				// 发送消息
 				line = "{\"command\":\"SEND_MSG\",\"data\":{\"message\":{\"content\":\"Hello  World\",\"ticket\":\"" + res.Data["session"]["ticket"].(string) + "\",\"token\":\"" + token + "\"}}}"
 
+				time.Sleep(5 * time.Second)
 			}
 		}
 		writer.WriteString(string(line) + "\n")
@@ -77,5 +142,4 @@ func main() {
 			os.Exit(0)
 		}
 	}
-
 }

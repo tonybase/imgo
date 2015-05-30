@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"runtime"
 )
 
 // 启动HTTP服务
@@ -16,6 +17,7 @@ func StartHttpServer(config util.IMConfig) error {
 	log.Printf("Http服务器启动中...")
 
 	// 设置请求映射地址及对应处理方法
+	http.HandleFunc("/system", handleSystem)
 	http.HandleFunc("/register", handleRegister)
 	http.HandleFunc("/login", handleLogin)
 	http.HandleFunc("/query", handleQuery)
@@ -36,6 +38,20 @@ func StartHttpServer(config util.IMConfig) error {
 		return fmt.Errorf("监听Http失败: %s", err)
 	}
 	return nil
+}
+
+// 系统状态信息
+func handleSystem(resp http.ResponseWriter, req *http.Request) {
+	var mem runtime.MemStats
+	runtime.ReadMemStats(&mem)
+
+	data := make(map[string]interface{})
+	data["conn"] = len(ClientMaps)
+	data["mem.alloc"] = mem.Alloc
+	data["mem.total_alloc"] = mem.TotalAlloc
+	data["mem.heap_alloc"] = mem.HeapAlloc
+	data["mem.heap_sys"] = mem.HeapSys
+	resp.Write(common.NewIMResponseData(data, "").Encode())
 }
 
 // 注册请求

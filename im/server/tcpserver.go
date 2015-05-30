@@ -245,6 +245,9 @@ func (this *Server) receivedHandler(request common.IMRequest) {
 		client.PutOut(common.NewIMResponseData(util.SetData("categories", categories), common.GET_BUDDY_LIST_RETURN))
 		//初始化好友列表之后 检查该用户有没有未读的好友请求 并推送给用户
 		buddyRequests, err := model.GetBuddyRequestsByReceiver(client.Login.UserId)
+		if(err != nil) {
+			client.PutOut(common.NewIMResponseSimple(300, err.Error(), common.GET_BUDDY_LIST_RETURN))
+		}
 		if len(buddyRequests) > 0 {
 			for _, buddyRequest := range buddyRequests {
 				user, _ := model.GetUserById(buddyRequest.Sender)
