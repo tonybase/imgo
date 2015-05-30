@@ -79,7 +79,7 @@ func (this *Server) joinHandler(conn net.Conn) {
 	client := common.CreateClient(key, conn)
 	//给客户端指定key
 	this.clients[key] = client
-	log.Printf("新客户端Key:[%s] total:%d", client.Key, len(ClientMaps))
+	log.Printf("新客户端Key:[%s] online:%d", client.Key, len(ClientMaps))
 	// 开启协程不断地接收消息
 	go func() {
 		for {
@@ -140,7 +140,7 @@ func (this *Server) quitHandler(client *common.Client) {
 		client.Close()
 		delete(this.clients, client.Key)
 
-		log.Println("客户端退出: ", client.Key)
+		log.Println("客户端退出: %s online:%d", client.Key, len(ClientMaps))
 	}
 }
 
