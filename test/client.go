@@ -94,5 +94,6 @@ func main() {
 
 		}
 
+		line += "\n"
 	}
 }

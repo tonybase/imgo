@@ -119,18 +119,20 @@ func (this *Server) quitHandler(client *common.Client) {
 		}
 
 		// 通知在线的好友，我离线了
-		keys, err := model.GetBuddiesKeyById(client.Login.UserId)
-		if err != nil {
-			client.PutOut(common.NewIMResponseSimple(300, err.Error(), common.SEND_STATUS_CHANGE))
-			return
-		}
-		for i := 0; i < len(keys); i++ {
-			//给对应的连接推送好友状态变化的通知
-			data := make(map[string]string)
-			data["id"] = client.Login.UserId
-			data["state"] = "0"
-			if (this.clients[keys[i]] != nil) {
-				this.clients[keys[i]].PutOut(common.NewIMResponseData(util.SetData("user", data), common.PUSH_STATUS_CHANGE))
+		if client.Login != nil {
+			keys, err := model.GetBuddiesKeyById(client.Login.UserId)
+			if err != nil {
+				client.PutOut(common.NewIMResponseSimple(300, err.Error(), common.SEND_STATUS_CHANGE))
+				return
+			}
+			for i := 0; i < len(keys); i++ {
+				//给对应的连接推送好友状态变化的通知
+				data := make(map[string]string)
+				data["id"] = client.Login.UserId
+				data["state"] = "0"
+				if (this.clients[keys[i]] != nil) {
+					this.clients[keys[i]].PutOut(common.NewIMResponseData(util.SetData("user", data), common.PUSH_STATUS_CHANGE))
+				}
 			}
 		}
 
