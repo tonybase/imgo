@@ -17,6 +17,7 @@ type IMResponse struct {
 }
 
 var Host = "123.59.15.125:9090"
+//var Host = "127.0.0.1:9090"
 var conut = 0
 var waiter = make(chan string)
 

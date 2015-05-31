@@ -2,6 +2,8 @@ package server
 
 import (
 	"code.google.com/p/go-uuid/uuid"
+	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/cpu"
 	"fmt"
 	"im-go/im/common"
 	"im-go/im/model"
@@ -9,7 +11,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"runtime"
+	"time"
+	"strconv"
 )
 
 // 启动HTTP服务
@@ -42,15 +45,18 @@ func StartHttpServer(config util.IMConfig) error {
 
 // 系统状态信息
 func handleSystem(resp http.ResponseWriter, req *http.Request) {
-	var mem runtime.MemStats
-	runtime.ReadMemStats(&mem)
+	mem, _ := mem.VirtualMemory()
+	cpuNum, _ := cpu.CPUCounts(true);
+	cpuInfo, _ := cpu.CPUPercent(10 * time.Microsecond, true);
 
 	data := make(map[string]interface{})
-	data["conn"] = len(ClientMaps)
-	data["mem.alloc"] = mem.Alloc
-	data["mem.total_alloc"] = mem.TotalAlloc
-	data["mem.heap_alloc"] = mem.HeapAlloc
-	data["mem.heap_sys"] = mem.HeapSys
+	data["im.conn"] = len(ClientMaps)
+	data["mem.total"] = fmt.Sprintf("%vMB", mem.Total/1024/1024)
+	data["mem.free"] = fmt.Sprintf("%vMB", mem.Free/1024/1024)
+	data["mem.used_percent"] = fmt.Sprintf("%s%%", strconv.FormatFloat(mem.UsedPercent, 'f', 2, 64))
+	data["cpu.num"] = cpuNum
+	data["cpu.info"] = cpuInfo
+
 	resp.Write(common.NewIMResponseData(data, "").Encode())
 }
 
