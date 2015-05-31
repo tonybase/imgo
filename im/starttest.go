@@ -22,8 +22,8 @@ var waiter = make(chan string)
 
 func main() {
 
-	for i := 0; i<1000; i++ {
-		go testTcp()
+	for i := 0; i<100000; i++ {
+		go testConn()
 
 		time.Sleep(100 * time.Millisecond)
 	}
@@ -33,7 +33,7 @@ func main() {
 
 // 测试长连接数量
 func testConn() {
-	_, err := net.Dial("tcp", Host)
+	conn, err := net.Dial("tcp", Host)
 
 	if err != nil {
 		fmt.Println(err)
@@ -41,6 +41,12 @@ func testConn() {
 	}
 	conut++
 	fmt.Printf("connected: %d\n", conut)
+	reader := bufio.NewReader(conn)
+	for {
+		if line, _, err := reader.ReadLine(); err == nil {
+			fmt.Println(string(line))
+		}
+	}
 }
 
 // 测试tcp发送和接收
@@ -76,7 +82,7 @@ func testTcp() {
 		if line != "" {
 			line = "{\"command\":\"TEST_TCP\",\"data\":null}"
 		}
-		time.Sleep(30 * time.Second)
+		time.Sleep(120 * time.Second)
 
 		writer.WriteString(string(line) + "\n")
 		err := writer.Flush()
@@ -137,7 +143,7 @@ func test(sender string, token string, receiver string) {
 				// 发送消息
 				line = "{\"command\":\"SEND_MSG\",\"data\":{\"message\":{\"content\":\"Hello  World\",\"ticket\":\"" + res.Data["session"]["ticket"].(string) + "\",\"token\":\"" + token + "\"}}}"
 
-				time.Sleep(5 * time.Second)
+				time.Sleep(30 * time.Second)
 			}
 		}
 		writer.WriteString(string(line) + "\n")
