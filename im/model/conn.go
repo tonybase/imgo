@@ -18,7 +18,7 @@ type Conn struct {
 }
 
 /*
- 根据Token获取连接的数量
+ 根据Key获取连接的数量
 */
 func CountConnByKey(key string) (int64, error) {
 	var num int64
@@ -35,6 +35,18 @@ func CountConnByKey(key string) (int64, error) {
 func CountConnByToken(token string) (int64, error) {
 	var num int64
 	err := Database.QueryRow("select count(*) from im_conn where token=?", token).Scan(&num)
+	if err != nil {
+		return -1, &DatabaseError{"根据Token获取连接数量错误"}
+	}
+	return num, nil
+}
+
+/*
+ 根据Token获取连接的数量
+*/
+func CountConnByUserId(userId string) (int64, error) {
+	var num int64
+	err := Database.QueryRow("select count(*) from im_conn where user_id=?", userId).Scan(&num)
 	if err != nil {
 		return -1, &DatabaseError{"根据Token获取连接数量错误"}
 	}
@@ -69,7 +81,7 @@ func GetConnByToken(token string) (*Conn, error) {
 	row := Database.QueryRow("select * from im_conn where token=?", token)
 	err := row.Scan(&conn.Key, &conn.UserId, &conn.Token, &conn.CreateAt, &conn.UpdateAt)
 	if err != nil {
-		log.Println("根据Token获取用户连接记录错误", err)
+//		log.Println("根据Token获取用户连接记录错误", err)
 		return nil, &DatabaseError{"根据Token获取用户连接记录错误"}
 	}
 	return &conn, nil

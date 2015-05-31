@@ -7,6 +7,7 @@ import (
 	"os"
 	"encoding/json"
 	"time"
+	"fmt"
 )
 
 type IMResponse struct {
@@ -17,12 +18,13 @@ type IMResponse struct {
 }
 
 var Host = "123.59.15.125:9090"
+var conut = 0
 
 func main() {
-	var recv chan string = make(chan string)
+	recv := make(chan string)
 
-	for i := 0; i<10000; i++ {
-		go testConn()
+	for i := 0; i<5000; i++ {
+		go testTcp()
 	}
 
 	<-recv
@@ -34,7 +36,10 @@ func testConn() {
 
 	if err != nil {
 		log.Fatal(err)
+		return
 	}
+	conut++
+	fmt.Printf("connected: %d\n", conut)
 }
 
 // 测试tcp发送和接收
@@ -48,7 +53,7 @@ func testTcp() {
 	reader := bufio.NewReader(conn)
 	writer := bufio.NewWriter(conn)
 
-	var recv chan string = make(chan string)
+	recv := make(chan string)
 
 	go func() {
 		for {
@@ -63,20 +68,14 @@ func testTcp() {
 		}
 	}()
 
-	var res IMResponse
 	for {
 		// 收到消息，然后再回复
 		line := <-recv
 		if line != "" {
-			json.Unmarshal([]byte(line), &res)
-			switch res.Refer {
-			case "TCP_TEST":
-				// 发送消息
-				line = "{\"command\":\"TEST_TCP\",\"data\":\"Hello.\"}"
-
-				time.Sleep(10 * time.Second)
-			}
+			line = "{\"command\":\"TEST_TCP\",\"data\":null}"
 		}
+		time.Sleep(10 * time.Second)
+
 		writer.WriteString(string(line) + "\n")
 		err := writer.Flush()
 		if (err != nil) {
@@ -96,7 +95,7 @@ func test(sender string, token string, receiver string) {
 	reader := bufio.NewReader(conn)
 	writer := bufio.NewWriter(conn)
 
-	var recv chan string = make(chan string)
+	recv := make(chan string)
 
 	go func() {
 		for {

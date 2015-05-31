@@ -110,28 +110,25 @@ func (this *Server) joinHandler(conn net.Conn) {
 */
 func (this *Server) quitHandler(client *common.Client) {
 	if client != nil {
-		// 判断要求改变的状态和当前该用户的状态是否一致
-		model.DeleteConnByKey(client.Key)
-		count, _ := model.CountConnByKey(client.Key)
-		// 如果没有这用户的连接，同时更新用户状态为离线
-		if count == 0 && client.Login != nil {
-			model.UpdateUserStatus(client.Login.UserId, "0")
-		}
-
 		// 通知在线的好友，我离线了
 		if client.Login != nil {
-			keys, err := model.GetBuddiesKeyById(client.Login.UserId)
-			if err != nil {
-				client.PutOut(common.NewIMResponseSimple(300, err.Error(), common.SEND_STATUS_CHANGE))
-				return
+			// 判断要求改变的状态和当前该用户的状态是否一致
+			model.DeleteConnByKey(client.Key)
+			count, _ := model.CountConnByUserId(client.Login.UserId)
+			// 如果没有这用户的连接，同时更新用户状态为离线
+			if count == 0 {
+				model.UpdateUserStatus(client.Login.UserId, "0")
 			}
-			for i := 0; i < len(keys); i++ {
-				//给对应的连接推送好友状态变化的通知
-				data := make(map[string]string)
-				data["id"] = client.Login.UserId
-				data["state"] = "0"
-				if (this.clients[keys[i]] != nil) {
-					this.clients[keys[i]].PutOut(common.NewIMResponseData(util.SetData("user", data), common.PUSH_STATUS_CHANGE))
+			keys, err := model.GetBuddiesKeyById(client.Login.UserId)
+			if err == nil {
+				for i := 0; i < len(keys); i++ {
+					//给对应的连接推送好友状态变化的通知
+					data := make(map[string]string)
+					data["id"] = client.Login.UserId
+					data["state"] = "0"
+					if (this.clients[keys[i]] != nil) {
+						this.clients[keys[i]].PutOut(common.NewIMResponseData(util.SetData("user", data), common.PUSH_STATUS_CHANGE))
+					}
 				}
 			}
 		}
