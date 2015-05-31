@@ -3,7 +3,7 @@
 ## 概要
 	这是一个使用go语言开发的高性能IM服务端。单台服务器可以承受近百万并发(经测试单台服务器可开启90W+协程,30W+TCP长连接)，实现具体IM基本功能，用户能够达到一般IM所拥有的使用功能。
 ## 服务端设计
-	
+![image](http://git.oschina.net/Zhihui_Chen/im-go/raw/master/docs/images/login.png)
 ## 服务端特点
 	具有稳定性，可拓展性，高效性，高并发等特点
 ## 客户端设计
