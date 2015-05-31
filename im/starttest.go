@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"log"
 	"net"
 	"os"
 	"encoding/json"
@@ -19,15 +18,17 @@ type IMResponse struct {
 
 var Host = "123.59.15.125:9090"
 var conut = 0
+var waiter = make(chan string)
 
 func main() {
-	recv := make(chan string)
 
-	for i := 0; i<5000; i++ {
+	for i := 0; i<1000; i++ {
 		go testTcp()
+
+		time.Sleep(100 * time.Millisecond)
 	}
 
-	<-recv
+	<-waiter
 }
 
 // 测试长连接数量
@@ -35,7 +36,7 @@ func testConn() {
 	_, err := net.Dial("tcp", Host)
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 		return
 	}
 	conut++
@@ -47,7 +48,8 @@ func testTcp() {
 	conn, err := net.Dial("tcp", Host)
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		return
 	}
 	defer conn.Close()
 	reader := bufio.NewReader(conn)
@@ -60,7 +62,7 @@ func testTcp() {
 			if line, _, err := reader.ReadLine(); err == nil {
 				var str string
 				str = string(line)
-				log.Println(str)
+				fmt.Println(str)
 				recv <- str
 			} else {
 				os.Exit(0)
@@ -74,7 +76,7 @@ func testTcp() {
 		if line != "" {
 			line = "{\"command\":\"TEST_TCP\",\"data\":null}"
 		}
-		time.Sleep(10 * time.Second)
+		time.Sleep(30 * time.Second)
 
 		writer.WriteString(string(line) + "\n")
 		err := writer.Flush()
@@ -89,7 +91,8 @@ func test(sender string, token string, receiver string) {
 	conn, err := net.Dial("tcp", Host)
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		return
 	}
 	defer conn.Close()
 	reader := bufio.NewReader(conn)
@@ -102,7 +105,7 @@ func test(sender string, token string, receiver string) {
 			if line, _, err := reader.ReadLine(); err == nil {
 				var str string
 				str = string(line)
-				log.Println(str)
+				fmt.Println(str)
 				recv <- str
 			} else {
 				os.Exit(0)
