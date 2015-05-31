@@ -2,7 +2,6 @@ package model
 
 import (
 	"database/sql"
-	"log"
 	"time"
 )
 
