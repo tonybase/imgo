@@ -47,7 +47,7 @@ func StartHttpServer(config util.IMConfig) error {
 func handleSystem(resp http.ResponseWriter, req *http.Request) {
 	mem, _ := mem.VirtualMemory()
 	cpuNum, _ := cpu.CPUCounts(true);
-	cpuInfo, _ := cpu.CPUPercent(time.Microsecond, true);
+	cpuInfo, _ := cpu.CPUPercent(10 * time.Microsecond, true);
 
 	data := make(map[string]interface{})
 	data["im.conn"] = len(ClientMaps)
