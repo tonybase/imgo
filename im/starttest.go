@@ -16,19 +16,21 @@ type IMResponse struct {
 	Refer  string                            `json:"refer"`  //来源
 }
 
+var Host = "123.59.15.125:9090"
+
 func main() {
 	var recv chan string = make(chan string)
 
-	for i := 0; i<1000; i++ {
-		go testTcp()
+	for i := 0; i<10000; i++ {
+		go testConn()
 	}
 
-	<- recv
+	<-recv
 }
 
 // 测试长连接数量
 func testConn() {
-	_, err := net.Dial("tcp", "127.0.0.1:9090")
+	_, err := net.Dial("tcp", Host)
 
 	if err != nil {
 		log.Fatal(err)
@@ -37,7 +39,7 @@ func testConn() {
 
 // 测试tcp发送和接收
 func testTcp() {
-	conn, err := net.Dial("tcp", "127.0.0.1:9090")
+	conn, err := net.Dial("tcp", Host)
 
 	if err != nil {
 		log.Fatal(err)
@@ -85,7 +87,7 @@ func testTcp() {
 
 // 测试转发，以及数据库能力
 func test(sender string, token string, receiver string) {
-	conn, err := net.Dial("tcp", "127.0.0.1:9090")
+	conn, err := net.Dial("tcp", Host)
 
 	if err != nil {
 		log.Fatal(err)
