@@ -8,9 +8,17 @@
 	具有稳定性，可拓展性，高效性，高并发等特点
 ## 客户端设计
 	客户端是新版本的IQQ项目。使用Swing开发。可以在win,osx,linux上良好运行。具有良好的界面交互效果
-## 服务端截图客户端截图
-
 ## 测试数据
+	服务器配置：	操作系统：CentOS 6.5	CPU： 2核心	内存： 4G	系统盘： 12G	SSD：40G	带宽：5M测试结果：
+![image](http://git.oschina.net/Zhihui_Chen/im-go/raw/master/docs/images/start_server.png)
+
+空闲时服务器信息：
+
+![image](http://git.oschina.net/Zhihui_Chen/im-go/raw/master/docs/images/server_idle.png)
+
+建立5000TCP连接之后的服务器信息：
+
+![image](http://git.oschina.net/Zhihui_Chen/im-go/raw/master/docs/images/server_5k.png)
 
 ## 未来
 #### 开源版本：	1. 发送表情	2. 发送文件	3. 好友分组	4. 离线重连机制处理	5. 系统重构提高性能#### 商业版本：	1. 集成微信	2. 开发App	3. 开发webchat	4. 添加管理后台	5. 系统重构为分布式设计	6. 添加缓存机制	7. 简单的数据采集和BI
