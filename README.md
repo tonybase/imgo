@@ -24,4 +24,5 @@
 #### 开源版本：	1. 发送表情	2. 发送文件	3. 好友分组	4. 离线重连机制处理	5. 系统重构提高性能#### 商业版本：	1. 集成微信	2. 开发App	3. 开发webchat	4. 添加管理后台	5. 系统重构为分布式设计	6. 添加缓存机制	7. 简单的数据采集和BI
 
 ## 版权声明
-	开发者:Tony、Itnik	该系统遵守GPL3.0开源协议。	商业使用请联系作者。
+	开发者:Tony、Itnik	该系统遵守GPL3.0开源协议。	商业使用请联系作者。## Link
++ [IM协议文档](http://git.oschina.net/Zhihui_Chen/im-go/blob/master/docs/IM%E6%8E%A5%E5%8F%A3%E5%8D%8F%E8%AE%AEV1.0.1.docx)+ [客户端](https://github.com/im-qq/im-go)
