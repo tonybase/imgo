@@ -2,7 +2,7 @@ package model
 
 import (
 	"database/sql"
-	"im-go/im/util"
+	"imgo/im/util"
 )
 
 /*

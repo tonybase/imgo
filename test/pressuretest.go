@@ -2,11 +2,11 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
+	"fmt"
 	"net"
 	"os"
-	"encoding/json"
 	"time"
-	"fmt"
 )
 
 type IMResponse struct {
@@ -17,16 +17,17 @@ type IMResponse struct {
 }
 
 var Host = "123.59.15.125:9090"
+
 //var Host = "127.0.0.1:9090"
 var conut = 0
 var waiter = make(chan string)
 
 func main() {
 
-	for i := 0; i<100000; i++ {
+	for i := 0; i < 400000; i++ {
 		go testConn()
 
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 	}
 
 	<-waiter
@@ -87,7 +88,7 @@ func testTcp() {
 
 		writer.WriteString(string(line) + "\n")
 		err := writer.Flush()
-		if (err != nil) {
+		if err != nil {
 			os.Exit(0)
 		}
 	}
@@ -149,7 +150,7 @@ func test(sender string, token string, receiver string) {
 		}
 		writer.WriteString(string(line) + "\n")
 		err := writer.Flush()
-		if (err != nil) {
+		if err != nil {
 			os.Exit(0)
 		}
 	}

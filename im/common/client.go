@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"log"
 	"net"
-	"im-go/im/model"
+	"imgo/im/model"
 )
 
 /*

@@ -3,9 +3,9 @@ package server
 import (
 	"code.google.com/p/go-uuid/uuid"
 	"fmt"
-	"im-go/im/common"
-	"im-go/im/model"
-	"im-go/im/util"
+	"imgo/im/common"
+	"imgo/im/model"
+	"imgo/im/util"
 	"log"
 	"net"
 	"os"

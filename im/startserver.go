@@ -2,10 +2,10 @@ package main
 
 import (
 	"flag"
-	"im-go/im/util"
+	"imgo/im/util"
 	"log"
-	"im-go/im/model"
-	"im-go/im/server"
+	"imgo/im/model"
+	"imgo/im/server"
 )
 
 const (
